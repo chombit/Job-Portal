@@ -1,0 +1,26 @@
+# === Global ===
+.DS_Store
+.env
+*.log
+
+# === Frontend (React + Vite + npm) ===
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/coverage/
+frontend/npm-debug.log
+
+# === Backend (Node.js + Express + npm) ===
+backend/node_modules/
+backend/.env
+backend/dist/
+backend/build/
+backend/.cache/
+backend/tmp/
+backend/coverage/
+backend/npm-debug.log
+
+.vscode/
+
