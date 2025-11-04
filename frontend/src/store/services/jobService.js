@@ -3,6 +3,17 @@ import { api } from './authService';
 const API_ENDPOINT = '/jobs';
 
 export default {
+  // Get all jobs
+  getJobs: async (params = {}) => {
+    try {
+      const response = await api.get(API_ENDPOINT, { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching jobs:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch jobs');
+    }
+  },
+
   // Create a new job
   createJob: async (jobData) => {
     try {
