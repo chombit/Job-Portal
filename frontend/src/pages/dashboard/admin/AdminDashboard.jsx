@@ -22,11 +22,9 @@ const AdminDashboard = () => {
   const [recentJobs, setRecentJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch admin dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
   try {
-    // Mock data for testing
     setStats({
       totalUsers: 24,
       totalJobs: 15,
@@ -43,7 +41,6 @@ const AdminDashboard = () => {
         role: 'job_seeker',
         createdAt: new Date().toISOString(),
       },
-      // Add more mock users as needed
     ]);
 
     setRecentJobs([
@@ -56,7 +53,6 @@ const AdminDashboard = () => {
         postedAt: new Date().toISOString(),
         skills: ['React', 'JavaScript', 'TypeScript'],
       },
-      // Add more mock jobs as needed
     ]);
         setLoading(false);
       } catch (error) {
@@ -77,9 +73,7 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
 
-        {/* Stats */}
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Total Users */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center">
@@ -112,7 +106,6 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Total Jobs */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center">

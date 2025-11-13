@@ -34,8 +34,8 @@ exports.applyForJob = async (req, res, next) => {
     // Check if user has already applied
     const existingApplication = await Application.findOne({
       where: {
-        job_id: jobId,
-        applicant_id: req.user.id,
+        jobId: jobId,
+        applicantId: req.user.id,
       },
     });
 
@@ -43,12 +43,12 @@ exports.applyForJob = async (req, res, next) => {
       throw new AppError('You have already applied for this job', 400);
     }
 
-    // Create application
+    // Create application with correct field names that match the model
     const application = await Application.create({
-      job_id: jobId,
-      applicant_id: req.user.id,
-      cover_letter: coverLetter,
-      resume_url: resumeUrl,
+      jobId: jobId,
+      applicantId: req.user.id,
+      coverLetter: coverLetter,
+      resumeUrl: resumeUrl,
       status: 'pending',
     });
 
@@ -67,7 +67,7 @@ exports.applyForJob = async (req, res, next) => {
 exports.getMyApplications = async (req, res, next) => {
   try {
     const applications = await Application.findAll({
-      where: { applicant_id: req.user.id },
+      where: { applicantId: req.user.id },
       include: [
         {
           model: Job,
@@ -81,7 +81,7 @@ exports.getMyApplications = async (req, res, next) => {
           ],
         },
       ],
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
     });
 
     res.status(200).json({

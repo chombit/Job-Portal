@@ -1,4 +1,3 @@
-// src/components/routing/PublicRoute.jsx
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 

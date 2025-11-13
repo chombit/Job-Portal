@@ -1,4 +1,3 @@
-// src/components/routing/PrivateRoute.jsx
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
@@ -9,7 +8,6 @@ const PrivateRoute = ({ roles = [] }) => {
     return <Navigate to="/login" />;
   }
 
-  // Check if route is role-protected
   if (roles.length && !roles.includes(user?.role)) {
     return <Navigate to="/unauthorized" />;
   }

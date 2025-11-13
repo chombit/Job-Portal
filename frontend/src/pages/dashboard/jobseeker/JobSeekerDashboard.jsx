@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { DocumentTextIcon, ClockIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/outline';
+import { DocumentTextIcon, ClockIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon } from '@heroicons/react/outline';
+import { fetchFeaturedJobs } from '../../../store/slices/jobSlice';
 
 const JobSeekerDashboard = () => {
   const [activeTab, setActiveTab] = useState('applications');
@@ -9,8 +10,10 @@ const JobSeekerDashboard = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useSelector((state) => state.auth);
+  const { featuredJobs, featuredLoading } = useSelector((state) => state.jobs);
+  const dispatch = useDispatch();
 
-  // Fetch job seeker data
+  // Fetch job seeker data and featured jobs
   useEffect(() => {
     const fetchJobSeekerData = async () => {
       try {
@@ -19,6 +22,10 @@ const JobSeekerDashboard = () => {
         // const savedData = await dispatch(fetchSavedJobs());
         // setApplications(appsData);
         // setSavedJobs(savedData);
+        
+        // Fetch featured jobs
+        await dispatch(fetchFeaturedJobs());
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching job seeker data:', error);
@@ -27,7 +34,7 @@ const JobSeekerDashboard = () => {
     };
 
     fetchJobSeekerData();
-  }, []);
+  }, [dispatch]);
 
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
@@ -48,10 +55,23 @@ const JobSeekerDashboard = () => {
 
   return (
     <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 space-y-8">
+        {/* Welcome Section */}
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:px-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              Welcome back, {user?.name || 'Job Seeker'}!
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              Manage your job applications and explore new opportunities.
+            </p>
+          </div>
+        </div>
+
+        {/* Main Content */}
         <div className="pb-5 border-b border-gray-200">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Job Seeker Dashboard
+            My Job Search
           </h3>
           <p className="mt-1 text-sm text-gray-500">
             Manage your job applications and saved jobs.
@@ -90,46 +110,48 @@ const JobSeekerDashboard = () => {
                 {applications && applications.length > 0 ? (
                   <ul className="divide-y divide-gray-200">
                     {applications.map((application) => (
-                      <li key={application.id}>
-                        <div className="px-4 py-4 sm:px-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              {getStatusIcon(application.status)}
-                              <p className="ml-3 text-sm font-medium text-blue-600 truncate">
-                                {application.jobTitle}
-                              </p>
+                      <li key={application.id} className="hover:bg-gray-50">
+                        <Link to={`/jobs/${application.jobId || application.id}`} className="block">
+                          <div className="px-4 py-4 sm:px-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                {getStatusIcon(application.status)}
+                                <p className="ml-3 text-sm font-medium text-blue-600 hover:text-blue-500 truncate">
+                                  {application.jobTitle}
+                                </p>
+                              </div>
+                              <div className="ml-2 flex-shrink-0 flex">
+                                <span
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    application.status === 'pending'
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : application.status === 'accepted'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {application.status}
+                                </span>
+                              </div>
                             </div>
-                            <div className="ml-2 flex-shrink-0 flex">
-                              <span
-                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  application.status === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : application.status === 'accepted'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                              >
-                                {application.status}
-                              </span>
+                            <div className="mt-2 sm:flex sm:justify-between">
+                              <div className="sm:flex">
+                                <p className="flex items-center text-sm text-gray-500">
+                                  {application.company}
+                                </p>
+                                <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                  {application.location}
+                                </p>
+                              </div>
+                              <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                <p>
+                                  Applied on {' '}
+                                  {new Date(application.appliedDate).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                          <div className="mt-2 sm:flex sm:justify-between">
-                            <div className="sm:flex">
-                              <p className="flex items-center text-sm text-gray-500">
-                                {application.company}
-                              </p>
-                              <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                                {application.location}
-                              </p>
-                            </div>
-                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                              <p>
-                                Applied on{' '}
-                                {new Date(application.appliedDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>

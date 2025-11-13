@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '../../config';
 
-// Create and export axios instance with default config
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -9,7 +8,6 @@ export const api = axios.create({
   }
 });
 
-// Add request interceptor to include token in headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -23,7 +21,6 @@ api.interceptors.request.use(
   }
 );
 
-// Auth service methods
 const authService = {
   login: async (credentials) => {
     try {
@@ -31,13 +28,9 @@ const authService = {
       const { token, user } = response.data;
       
       if (token) {
-        // Store token in localStorage
         localStorage.setItem('token', token);
-        
-        // Set default auth header for all future requests
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
-        // Return user data to be handled by the component/Redux
         return { user, token };
       }
       
@@ -54,7 +47,6 @@ const authService = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      // Clear invalid token
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         delete api.defaults.headers.common['Authorization'];

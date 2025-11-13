@@ -20,7 +20,6 @@ function App() {
     <Router>
       <Toaster position="top-right" />
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<Layout />}>
         <Route path="test" element={<TestPage />} />
         <Route path="login" element={<LoginPage />} />
@@ -32,11 +31,9 @@ function App() {
           
         </Route>
 
-        {/* Protected Routes */}
         <Route element={<PrivateRoute allowedRoles={['job_seeker']} />}>
           <Route path="/job-seeker" element={<DashboardLayout />}>
             <Route index element={<JobSeekerDashboard />} />
-            {/* Add more job seeker routes here */}
           </Route>
         </Route>
 
@@ -44,14 +41,12 @@ function App() {
           <Route path="/employer" element={<DashboardLayout />}>
             <Route index element={<EmployerDashboard />} />
             <Route path="jobs/new" element={<JobForm />} />
-            {/* Add more employer routes here */}
           </Route>
         </Route>
 
         <Route element={<PrivateRoute allowedRoles={['admin']} />}>
           <Route path="/admin" element={<DashboardLayout />}>
-            <Route index element={<AdminDashboard />} />
-            {/* Add other admin routes here */}
+            <Route index element={<AdminDashboard />} />     
           </Route>
         </Route>
       </Routes>

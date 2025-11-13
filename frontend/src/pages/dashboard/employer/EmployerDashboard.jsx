@@ -11,14 +11,12 @@ const EmployerDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  // Debug Redux state
   const fullState = useSelector(state => state);
   console.log('Full Redux state:', fullState);
 
   const { postedJobs, loading, error } = useSelector((state) => state.employer);
   console.log('EmployerDashboard - Redux state:', { loading, error, postedJobs });
 
-  // Fetch employer's jobs
   useEffect(() => {
     const loadJobs = async () => {
       try {
@@ -30,13 +28,11 @@ const EmployerDashboard = () => {
     loadJobs();
   }, [dispatch]);
 
-  // Process jobs data when postedJobs changes
   useEffect(() => {
     if (!postedJobs) return;
 
     let jobsData = [];
     
-    // Handle different possible response structures
     if (Array.isArray(postedJobs)) {
       jobsData = postedJobs;
     } else if (postedJobs.data && Array.isArray(postedJobs.data)) {
@@ -49,12 +45,10 @@ const EmployerDashboard = () => {
     setJobs(jobsData);
   }, [postedJobs]);
 
-  // Handle job deletion
   const handleDeleteJob = async (jobId) => {
     if (window.confirm('Are you sure you want to delete this job posting?')) {
       try {
-        // TODO: Implement delete job
-        // await dispatch(deleteJob(jobId));
+        
         setJobs(jobs.filter(job => job.id !== jobId));
       } catch (error) {
         console.error('Error deleting job:', error);
@@ -62,7 +56,6 @@ const EmployerDashboard = () => {
     }
   };
 
-  // Loading state
   if (loading && !postedJobs) {
     return (
       <div className="text-center py-12">
@@ -72,7 +65,6 @@ const EmployerDashboard = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="bg-red-50 border-l-4 border-red-400 p-4">
@@ -90,7 +82,6 @@ const EmployerDashboard = () => {
     );
   }
 
-  // No jobs found
   if (!loading && jobs.length === 0) {
     return (
       <div className="text-center py-12">
@@ -147,7 +138,6 @@ const EmployerDashboard = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="mt-8">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
@@ -175,7 +165,6 @@ const EmployerDashboard = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
         <div className="mt-8">
           {activeTab === 'jobs' ? (
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -228,7 +217,6 @@ const EmployerDashboard = () => {
                 {applications.length > 0 ? (
                   applications.map((application) => (
                     <li key={application.id}>
-                      {/* Application details */}
                       <div className="px-4 py-4 sm:px-6">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium text-blue-600 truncate">

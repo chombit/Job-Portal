@@ -1,4 +1,3 @@
-// frontend/src/constants/jobForm.js
 export const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'AUD', 'CAD'];
 export const PERIODS = ['year', 'month', 'week', 'hour'];
 export const JOB_TYPES = ['full-time', 'part-time', 'contract', 'temporary', 'internship'];
