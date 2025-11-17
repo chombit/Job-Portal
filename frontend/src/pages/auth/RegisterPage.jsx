@@ -125,7 +125,7 @@ const RegisterPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">I am a</label>
-              <div className="mt-1 grid grid-cols-2 gap-4">
+              <div className="mt-1 space-y-2">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
@@ -136,7 +136,7 @@ const RegisterPage = () => {
                   />
                   <span className="ml-2">Job Seeker</span>
                 </label>
-                <label className="inline-flex items-center">
+                <label className="inline-flex items-center ml-6">
                   <input
                     type="radio"
                     className="form-radio h-4 w-4 text-blue-600"
@@ -145,6 +145,15 @@ const RegisterPage = () => {
                     onChange={(e) => setIsEmployer(e.target.checked)}
                   />
                   <span className="ml-2">Employer</span>
+                </label>
+                <label className="inline-flex items-center ml-6">
+                  <input
+                    type="radio"
+                    className="form-radio h-4 w-4 text-blue-600"
+                    value="admin"
+                    {...register('role')}
+                  />
+                  <span className="ml-2">Admin</span>
                 </label>
               </div>
               {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>}

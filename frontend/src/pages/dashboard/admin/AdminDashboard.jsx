@@ -8,7 +8,7 @@ import {
   UserGroupIcon,
   ClockIcon,
 } from '@heroicons/react/outline';
-
+import adminService from '../../../store/services/api/admin';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -24,36 +24,23 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-  try {
-    setStats({
-      totalUsers: 24,
-      totalJobs: 15,
-      totalEmployers: 8,
-      totalJobSeekers: 16,
-      pendingApprovals: 3,
-    });
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [statsData, usersData, jobsData] = await Promise.all([
+          adminService.getDashboardStats(),
+          adminService.getRecentUsers(),
+          adminService.getRecentJobs(),
+        ]);
 
-    setRecentUsers([
-      {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'job_seeker',
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+        console.log('API Response - Stats:', statsData);
+        console.log('API Response - Users:', usersData);
+        console.log('API Response - Jobs:', jobsData);
 
-    setRecentJobs([
-      {
-        id: 1,
-        title: 'FullStack Developer',
-        company: 'Tech Corp',
-        location: 'Remote',
-        status: 'active',
-        postedAt: new Date().toISOString(),
-        skills: ['React', 'JavaScript', 'TypeScript'],
-      },
-    ]);
+        setStats(statsData);
+        setRecentUsers(usersData);
+        setRecentJobs(jobsData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching admin dashboard data:', error);
@@ -317,8 +304,10 @@ const AdminDashboard = () => {
                         <div className="ml-2 flex-shrink-0 flex">
                           <p
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              job.status === 'active'
+                              job.status === 'published'
                                 ? 'bg-green-100 text-green-800'
+                                : job.status === 'draft'
+                                ? 'bg-gray-100 text-gray-800'
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}
                           >
@@ -329,7 +318,7 @@ const AdminDashboard = () => {
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500">
-                            {job.company}
+                            {job.employer?.name || 'Unknown Company'}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
                             {job.location}
@@ -337,7 +326,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                           <p>
-                            Posted {new Date(job.postedAt).toLocaleDateString()}
+                            Posted {new Date(job.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

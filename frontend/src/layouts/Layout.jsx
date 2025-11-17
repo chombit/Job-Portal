@@ -55,7 +55,7 @@ const Layout = () => {
                 {isAuthenticated ? (
                   <div className="hidden sm:ml-6 sm:flex sm:items-center">
                     <Link
-                      to={user?.role === 'employer' ? '/employer' : '/job-seeker'}
+                      to={user?.role === 'admin' ? '/admin' : user?.role === 'employer' ? '/employer' : '/job-seeker'}
                       className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
                     >
                       Dashboard
@@ -172,7 +172,7 @@ const Layout = () => {
                   <>
                     <Disclosure.Button
                       as={Link}
-                      to={user?.role === 'employer' ? '/employer' : '/job-seeker'}
+                      to={user?.role === 'admin' ? '/admin' : user?.role === 'employer' ? '/employer' : '/job-seeker'}
                       className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                     >
                       Dashboard

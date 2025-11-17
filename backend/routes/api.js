@@ -7,6 +7,7 @@ const authController = require('../controllers/authController');
 const jobController = require('../controllers/jobController');
 const applicationController = require('../controllers/applicationController');
 const savedJobController = require('../controllers/savedJobController');
+const adminController = require('../controllers/adminController');
 
 // Authentication routes
 router.post('/auth/register', authController.register);
@@ -37,5 +38,15 @@ router.post('/jobs/:jobId/save', auth, savedJobController.saveJob);
 router.put('/saved-jobs/:id', auth, savedJobController.updateSavedJob);
 router.delete('/saved-jobs/:id', auth, savedJobController.removeSavedJob);
 router.get('/jobs/:jobId/is-saved', auth, savedJobController.checkIfJobIsSaved);
+
+// Admin routes
+router.get('/admin/dashboard/stats', auth, authorize('admin'), adminController.getDashboardStats);
+router.get('/admin/users/recent', auth, authorize('admin'), adminController.getRecentUsers);
+router.get('/admin/users', auth, authorize('admin'), adminController.getAllUsers);
+router.get('/admin/jobs/recent', auth, authorize('admin'), adminController.getRecentJobs);
+router.get('/admin/jobs', auth, authorize('admin'), adminController.getAllJobs);
+router.get('/admin/approvals/pending', auth, authorize('admin'), adminController.getPendingApprovals);
+router.put('/admin/jobs/:id/status', auth, authorize('admin'), adminController.updateJobStatus);
+router.put('/admin/users/:id/status', auth, authorize('admin'), adminController.updateUserStatus);
 
 module.exports = router;
