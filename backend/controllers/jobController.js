@@ -92,23 +92,27 @@ exports.getJob = async (req, res, next) => {
   try {
     const jobId = req.params.id;
     
+    console.log('getJob called with ID:', jobId, 'Type:', typeof jobId);
+    
     // Validate job ID
     if (!jobId || jobId === 'undefined') {
+      console.log('Job ID validation failed - ID is missing or undefined');
       return res.status(400).json({
         success: false,
         message: 'Job ID is required'
       });
     }
 
-    // Validate UUID format if needed
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(jobId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid job ID format'
-      });
-    }
+    // Temporarily remove UUID validation to debug
+    // const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    // if (!uuidRegex.test(jobId)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Invalid job ID format'
+    //   });
+    // }
 
+    console.log('Attempting to find job with ID:', jobId);
     const job = await Job.findByPk(jobId, {
       include: [
         {
@@ -118,6 +122,16 @@ exports.getJob = async (req, res, next) => {
         },
       ],
     });
+
+    console.log('Job found:', job ? 'Yes' : 'No');
+    if (job) {
+      console.log('Job details:', {
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        employerId: job.employerId
+      });
+    }
 
     if (!job) {
       return res.status(404).json({
