@@ -13,6 +13,15 @@ export default defineConfig({
     commonjsOptions: {
       include: [/react/, /react-dom/],
       transformMixedEsModules: true
+    },
+    rollupOptions: {
+      external: ['react', 'react-dom'],
+      output: {
+        globals: {
+          'react': 'React',
+          'react-dom': 'ReactDOM'
+        }
+      }
     }
   },
   css: {
