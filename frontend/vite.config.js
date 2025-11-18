@@ -5,10 +5,16 @@ import autoprefixer from 'autoprefixer';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react({
-    jsxRuntime: 'automatic',
-    jsxImportSource: 'react'
-  })],
+  plugins: [react()],
+  optimizeDeps: {
+    include: ['react', 'react-dom']
+  },
+  build: {
+    commonjsOptions: {
+      include: [/react/, /react-dom/],
+      transformMixedEsModules: true
+    }
+  },
   css: {
     postcss: {
       plugins: [
