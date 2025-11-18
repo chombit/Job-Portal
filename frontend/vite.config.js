@@ -7,11 +7,11 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['react', 'react-dom']
+    include: ['react', 'react-dom', 'yup', 'property-expr']
   },
   build: {
     commonjsOptions: {
-      include: [/react/, /react-dom/],
+      include: [/react/, /react-dom/, /node_modules/, /node_modules\/property-expr/],
       transformMixedEsModules: true
     },
     rollupOptions: {
