@@ -5,7 +5,7 @@ import { deleteJob } from '../../store/slices/jobSlice';
 import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
 
 const JobCard = ({ job, onEdit, isEmployer = false }) => {
-  const jobId = job?._id || job?.id;
+  const jobId = job?.id || job?._id;
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const isJobOwner = user?.role === 'employer' && (user?._id === job.employer?._id || user?.id === job.employer?.id);
@@ -100,7 +100,7 @@ const JobCard = ({ job, onEdit, isEmployer = false }) => {
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
           <span>Posted {job.posted_at ? formatDistanceToNow(new Date(job.posted_at), { addSuffix: true }) : 'recently'}</span>
           <Link 
-            to={`/jobs/${job._id}`}
+            to={`/jobs/${jobId}`}
             className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
           >
             View details

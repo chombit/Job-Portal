@@ -18,7 +18,7 @@ const JobDetailsPage = () => {
   const [resume, setResume] = useState(null);
   const [isApplying, setIsApplying] = useState(false);
   
-  const { job, loading, error } = useSelector((state) => state.jobs);
+  const { currentJob: job, loading, error } = useSelector((state) => state.jobs);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   // Fetch job details
