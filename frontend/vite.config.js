@@ -15,7 +15,7 @@ export default defineConfig({
       transformMixedEsModules: true
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: ['react', 'react-dom', 'use-sync-external-store/shim', 'use-sync-external-store/shim/with-selector'],
       output: {
         globals: {
           'react': 'React',
