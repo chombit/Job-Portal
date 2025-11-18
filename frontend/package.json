@@ -27,7 +27,7 @@
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.9.4",
+    "react-router-dom": "^6.28.0",
     "react-toastify": "^11.0.5",
     "yup": "^1.7.1"
   },
@@ -38,7 +38,7 @@
     "@types/node": "^24.9.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/react-router-dom": "^5.3.3",
+    "@types/react-router-dom": "^6.28.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.36.0",
