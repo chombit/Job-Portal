@@ -14,15 +14,6 @@ export default defineConfig({
     commonjsOptions: {
       include: [/react/, /react-dom/, /node_modules/, /node_modules\/property-expr/],
       transformMixedEsModules: true
-    },
-    rollupOptions: {
-      external: ['react', 'react-dom', 'use-sync-external-store/shim', 'use-sync-external-store/shim/with-selector'],
-      output: {
-        globals: {
-          'react': 'React',
-          'react-dom': 'ReactDOM'
-        }
-      }
     }
   },
   css: {
