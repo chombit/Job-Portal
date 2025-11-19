@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline';
 import { fetchPostedJobs } from '../../../store/slices/employerSlice';
 
@@ -48,10 +49,12 @@ const EmployerDashboard = () => {
   const handleDeleteJob = async (jobId) => {
     if (window.confirm('Are you sure you want to delete this job posting?')) {
       try {
-        
+        await dispatch(deleteJob(jobId));
         setJobs(jobs.filter(job => job.id !== jobId));
+        toast.success('Job deleted successfully');
       } catch (error) {
         console.error('Error deleting job:', error);
+        toast.error('Failed to delete job');
       }
     }
   };

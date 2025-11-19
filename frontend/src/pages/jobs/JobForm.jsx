@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { createJob, resetJobState } from '../../store/slices/jobSlice';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createJob, updateJob, fetchJobById, resetJobState } from '../../store/slices/jobSlice';
 import { CURRENCIES, PERIODS, JOB_TYPES, EXP_LEVELS, STATUSES } from '../../constants/jobForm';
 
 const JobForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, success } = useSelector((state) => state.jobs);
+  const { id } = useParams();
+  const { loading, error, success, currentJob } = useSelector((state) => state.jobs);
+  const isEdit = Boolean(id);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -75,8 +77,38 @@ const JobForm = () => {
       skills: formData.skills,
     };
 
-    await dispatch(createJob(jobData));
+    await dispatch(isEdit ? updateJob({ jobId: id, jobData }) : createJob(jobData));
   };
+
+  // Fetch job data for editing
+  useEffect(() => {
+    if (isEdit && id) {
+      dispatch(fetchJobById(id));
+    }
+  }, [isEdit, id, dispatch]);
+
+  // Populate form with job data when editing
+  useEffect(() => {
+    if (isEdit && currentJob) {
+      setFormData({
+        title: currentJob.title || '',
+        description: currentJob.description || '',
+        location: currentJob.location || '',
+        jobType: currentJob.jobType || JOB_TYPES[0],
+        salaryMin: currentJob.salaryMin || '',
+        salaryMax: currentJob.salaryMax || '',
+        salaryCurrency: currentJob.salaryCurrency || CURRENCIES[0],
+        salaryPeriod: currentJob.salaryPeriod || PERIODS[0],
+        experienceLevel: currentJob.experienceLevel || EXP_LEVELS[0],
+        isRemote: currentJob.isRemote || false,
+        status: currentJob.status || STATUSES[0],
+        skills: currentJob.skills || [],
+        benefits: currentJob.benefits || [],
+        requirements: currentJob.requirements || [],
+        responsibilities: currentJob.responsibilities || []
+      });
+    }
+  }, [isEdit, currentJob]);
 
   // Reset form and redirect on success
   useEffect(() => {
@@ -86,8 +118,27 @@ const JobForm = () => {
     }
   }, [success, navigate, dispatch]);
 
+  // Show loading when fetching job data for edit
+  if (isEdit && loading && !currentJob) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading job details...</p>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEdit ? 'Edit Job' : 'Create New Job'}
+        </h1>
+        <p className="mt-2 text-gray-600">
+          {isEdit ? 'Update the job details below' : 'Fill in the details to post a new job'}
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
       {/* Form fields */}
       <div className="space-y-4">
         {/* Title */}
@@ -308,10 +359,11 @@ const JobForm = () => {
           disabled={loading}
           className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          {loading ? 'Creating...' : 'Create Job'}
+          {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Job' : 'Create Job')}
         </button>
       </div>
     </form>
+    </div>
   );
 };
 

@@ -41,6 +41,7 @@ function App() {
           <Route path="/employer" element={<DashboardLayout />}>
             <Route index element={<EmployerDashboard />} />
             <Route path="jobs/new" element={<JobForm />} />
+            <Route path="jobs/:id/edit" element={<JobForm />} />
           </Route>
         </Route>
 
