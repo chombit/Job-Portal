@@ -127,4 +127,4 @@ process.on('SIGTERM', () => {
   });
 });
 
-module.exports = app; // For testing purposes
+module.exports = app; 
