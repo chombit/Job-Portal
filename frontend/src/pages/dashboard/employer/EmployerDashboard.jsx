@@ -7,7 +7,7 @@ import { fetchPostedJobs, fetchJobApplications, updateApplicationStatus } from '
 import { deleteJob } from '../../../store/slices/jobSlice';
 
 const EmployerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('jobs,');
+  const [activeTab, setActiveTab] = useState('jobs');
   const [jobs, setJobs] = useState([]);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();

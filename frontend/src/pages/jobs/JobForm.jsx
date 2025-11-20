@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { createJob, updateJob, fetchJobById, resetJobState } from '../../store/slices/jobSlice';
 import { CURRENCIES, PERIODS, JOB_TYPES, EXP_LEVELS, STATUSES } from '../../constants/jobForm';
 
@@ -106,6 +107,7 @@ const JobForm = () => {
 
   useEffect(() => {
     if (success) {
+      toast.success(isEdit ? 'Job updated successfully' : 'Job created successfully');
       dispatch(resetJobState());
       navigate('/employer');
     }
@@ -344,7 +346,7 @@ const JobForm = () => {
       </div>
     </form>
     </div>
-  );
+);
 };
 
 export default JobForm;
