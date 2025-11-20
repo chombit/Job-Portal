@@ -19,12 +19,10 @@ const JobListingsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
   
-  // Fetch jobs when component mounts
   useEffect(() => {
     dispatch(fetchJobs());
   }, [dispatch]);
   
-  // Log jobs data for debugging
   useEffect(() => {
     if (jobs) {
       console.log('Jobs data:', jobs);
@@ -33,12 +31,10 @@ const JobListingsPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Apply current filters and search term
     applyFilters(filters);
   };
 
   const applyFilters = (currentFilters) => {
-    // Build search parameters
     const params = {};
     
     if (searchTerm.trim()) {
@@ -62,8 +58,6 @@ const JobListingsPage = () => {
       if (min && min !== '0') params.minSalary = min;
       if (max && max !== '+') params.maxSalary = max.replace('+', '');
     }
-    
-    // Dispatch search with parameters
     dispatch(fetchJobs(params));
   };
 
@@ -84,10 +78,8 @@ const JobListingsPage = () => {
         [name]: value,
       };
     }
-    
+ 
     setFilters(newFilters);
-    
-    // Auto-filter when any filter changes
     applyFilters(newFilters);
   };
 
@@ -99,18 +91,15 @@ const JobListingsPage = () => {
       salaryRange: '',
     });
     setSearchTerm('');
-    // Reset to fetch all jobs
     dispatch(fetchJobs());
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-700 to-blue-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold tracking-tight mb-6">Find Your Dream Job</h1>
           
-          {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl">
             <div className="flex rounded-lg shadow-sm">
               <div className="relative flex-grow focus-within:z-10">
@@ -134,8 +123,7 @@ const JobListingsPage = () => {
             </div>
           </form>
           
-          {/* Filter Toggle */}
-          <div className="mt-4 flex gap-4">
+            <div className="mt-4 flex gap-4">
             <button
               type="button"
               className="inline-flex items-center text-sm font-medium text-blue-100 hover:text-white"
@@ -156,10 +144,8 @@ const JobListingsPage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filters Sidebar */}
           {showFilters && (
             <div className="w-full md:w-64 flex-shrink-0">
               <div className="bg-white p-4 rounded-lg shadow">
@@ -174,7 +160,6 @@ const JobListingsPage = () => {
                   </button>
                 </div>
                 
-                {/* Job Type Filter */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Job Type</h3>
                   <div className="space-y-2">
@@ -197,7 +182,6 @@ const JobListingsPage = () => {
                   </div>
                 </div>
                 
-                {/* Experience Level Filter */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Experience Level</h3>
                   <div className="space-y-2">
@@ -220,7 +204,6 @@ const JobListingsPage = () => {
                   </div>
                 </div>
 
-                {/* Location Filter */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Location</h3>
                   <input
@@ -233,7 +216,6 @@ const JobListingsPage = () => {
                   />
                 </div>
 
-                {/* Salary Range Filter */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Salary Range</h3>
                   <select
@@ -249,8 +231,7 @@ const JobListingsPage = () => {
                     <option value="150000+">$150,000+</option>
                   </select>
                 </div>
-                
-                {/* Clear Filters Button */}
+                               
                 <button
                   type="button"
                   onClick={clearFilters}
@@ -261,8 +242,6 @@ const JobListingsPage = () => {
               </div>
             </div>
           )}
-
-          {/* Job Listings */}
           <div className="flex-1">
             {loading ? (
               <div className="flex justify-center items-center h-64">

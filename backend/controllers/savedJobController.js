@@ -1,9 +1,6 @@
 const { Job, SavedJob } = require('../models');
 const { AppError, NotFoundError } = require('../middleware/errorHandler');
 
-// @desc    Get my saved jobs
-// @route   GET /api/v1/saved-jobs
-// @access  Private
 exports.getSavedJobs = async (req, res, next) => {
   try {
     const savedJobs = await SavedJob.findAll({
@@ -34,21 +31,14 @@ exports.getSavedJobs = async (req, res, next) => {
   }
 };
 
-// @desc    Save a job
-// @route   POST /api/v1/jobs/:jobId/save
-// @access  Private
 exports.saveJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const { notes } = req.body;
-
-    // Check if job exists
     const job = await Job.findByPk(jobId);
     if (!job) {
       throw new NotFoundError('Job not found');
     }
-
-    // Check if job is already saved
     const existingSavedJob = await SavedJob.findOne({
       where: {
         user_id: req.user.id,
@@ -59,8 +49,6 @@ exports.saveJob = async (req, res, next) => {
     if (existingSavedJob) {
       throw new AppError('Job already saved', 400);
     }
-
-    // Save job
     const savedJob = await SavedJob.create({
       user_id: req.user.id,
       job_id: jobId,
@@ -76,9 +64,6 @@ exports.saveJob = async (req, res, next) => {
   }
 };
 
-// @desc    Update saved job notes
-// @route   PUT /api/v1/saved-jobs/:id
-// @access  Private
 exports.updateSavedJob = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -95,8 +80,7 @@ exports.updateSavedJob = async (req, res, next) => {
       throw new NotFoundError('Saved job not found');
     }
 
-    // Update notes
-    savedJob.notes = notes || savedJob.notes;
+      savedJob.notes = notes || savedJob.notes;
     await savedJob.save();
 
     res.status(200).json({
@@ -108,9 +92,6 @@ exports.updateSavedJob = async (req, res, next) => {
   }
 };
 
-// @desc    Remove saved job
-// @route   DELETE /api/v1/saved-jobs/:id
-// @access  Private
 exports.removeSavedJob = async (req, res, next) => {
   try {
     const savedJob = await SavedJob.findOne({
@@ -135,9 +116,6 @@ exports.removeSavedJob = async (req, res, next) => {
   }
 };
 
-// @desc    Check if job is saved
-// @route   GET /api/v1/jobs/:jobId/is-saved
-// @access  Private
 exports.checkIfJobIsSaved = async (req, res, next) => {
   try {
     const savedJob = await SavedJob.findOne({

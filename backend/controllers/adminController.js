@@ -1,8 +1,5 @@
 const { User, Job } = require('../models');
 
-// @desc    Get dashboard statistics
-// @route   GET /api/admin/dashboard/stats
-// @access  Private/Admin
 exports.getDashboardStats = async (req, res, next) => {
   try {
     const totalUsers = await User.count();
@@ -24,9 +21,6 @@ exports.getDashboardStats = async (req, res, next) => {
   }
 };
 
-// @desc    Get recent users
-// @route   GET /api/admin/users/recent
-// @access  Private/Admin
 exports.getRecentUsers = async (req, res, next) => {
   try {
     const users = await User.findAll({
@@ -41,10 +35,6 @@ exports.getRecentUsers = async (req, res, next) => {
     next(error);
   }
 };
-
-// @desc    Get all users
-// @route   GET /api/admin/users
-// @access  Private/Admin
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.findAll({
@@ -58,9 +48,6 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// @desc    Get recent jobs
-// @route   GET /api/admin/jobs/recent
-// @access  Private/Admin
 exports.getRecentJobs = async (req, res, next) => {
   try {
     const jobs = await Job.findAll({
@@ -79,9 +66,6 @@ exports.getRecentJobs = async (req, res, next) => {
   }
 };
 
-// @desc    Get all jobs
-// @route   GET /api/admin/jobs
-// @access  Private/Admin
 exports.getAllJobs = async (req, res, next) => {
   try {
     const jobs = await Job.findAll({
@@ -99,9 +83,6 @@ exports.getAllJobs = async (req, res, next) => {
   }
 };
 
-// @desc    Get pending approvals
-// @route   GET /api/admin/approvals/pending
-// @access  Private/Admin
 exports.getPendingApprovals = async (req, res, next) => {
   try {
     const pendingJobs = await Job.findAll({
@@ -129,9 +110,6 @@ exports.getPendingApprovals = async (req, res, next) => {
   }
 };
 
-// @desc    Approve/Reject job
-// @route   PUT /api/admin/jobs/:id/status
-// @access  Private/Admin
 exports.updateJobStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -150,9 +128,6 @@ exports.updateJobStatus = async (req, res, next) => {
   }
 };
 
-// @desc    Activate/Deactivate user
-// @route   PUT /api/admin/users/:id/status
-// @access  Private/Admin
 exports.updateUserStatus = async (req, res, next) => {
   try {
     const { isActive } = req.body;

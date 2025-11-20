@@ -51,7 +51,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Featured Jobs Section */}
       <div className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
@@ -66,7 +65,6 @@ const HomePage = () => {
 
           <div className="mt-10">
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Job cards will be mapped here */}
               <div className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="p-5">
                   <div className="flex items-center">
@@ -123,7 +121,6 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              {/* More job cards... */}
             </div>
           </div>
 

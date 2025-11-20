@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline';
-import { fetchPostedJobs } from '../../../store/slices/employerSlice';
+import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/outline';
+import { fetchPostedJobs, fetchJobApplications, updateApplicationStatus } from '../../../store/slices/employerSlice';
+import { deleteJob } from '../../../store/slices/jobSlice';
 
 const EmployerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('jobs');
+  const [activeTab, setActiveTab] = useState('jobs,');
   const [jobs, setJobs] = useState([]);
-  const [applications] = useState([]);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  const fullState = useSelector(state => state);
-  console.log('Full Redux state:', fullState);
-
-  const { postedJobs, loading, error } = useSelector((state) => state.employer);
+  const { postedJobs, applications: employerApplications, loading, loadingApplications, error } = useSelector((state) => state.employer);
   console.log('EmployerDashboard - Redux state:', { loading, error, postedJobs });
+
+  const applications = employerApplications || [];
+  const loadingApps = loadingApplications;
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -28,6 +28,21 @@ const EmployerDashboard = () => {
     };
     loadJobs();
   }, [dispatch]);
+
+  useEffect(() => {
+    const loadApplications = async () => {
+      if (activeTab !== 'applications') return;
+
+      try {
+        await dispatch(fetchJobApplications()).unwrap();
+      } catch (error) {
+        console.error('Error fetching applications:', error);
+        toast.error('Failed to load applications');
+      }
+    };
+
+    loadApplications();
+  }, [dispatch, activeTab]);
 
   useEffect(() => {
     if (!postedJobs) return;
@@ -59,6 +74,16 @@ const EmployerDashboard = () => {
     }
   };
 
+  const handleUpdateApplicationStatus = async (applicationId, status) => {
+    try {
+      await dispatch(updateApplicationStatus({ applicationId, status })).unwrap();
+      toast.success(`Application ${status} successfully`);
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      toast.error('Failed to update application status');
+    }
+  };
+
   if (loading && !postedJobs) {
     return (
       <div className="text-center py-12">
@@ -67,57 +92,6 @@ const EmployerDashboard = () => {
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">Error: {error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!loading && jobs.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <svg
-          className="mx-auto h-12 w-12 text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1}
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-        <h3 className="mt-2 text-lg font-medium text-gray-900">No job postings</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Get started by creating a new job posting.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/employer/jobs/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-            New Job Posting
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -216,66 +190,126 @@ const EmployerDashboard = () => {
             </div>
           ) : (
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
-              <ul className="divide-y divide-gray-200">
-                {applications.length > 0 ? (
-                  applications.map((application) => (
-                    <li key={application.id}>
-                      <div className="px-4 py-4 sm:px-6">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-blue-600 truncate">
-                            {application.jobTitle}
-                          </p>
-                          <div className="ml-2 flex-shrink-0 flex">
-                            <p
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                application.status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : application.status === 'accepted'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {application.status}
-                            </p>
+              {loadingApps ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading applications...</p>
+                </div>
+              ) : applications.length > 0 ? (
+                <ul className="divide-y divide-gray-200">
+                  {applications.map((application) => (
+                    <li key={application.id} className="px-4 py-6 sm:px-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                                <span className="text-white font-medium text-sm">
+                                  {application.applicant?.name?.charAt(0).toUpperCase() || 'U'}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {application.applicant?.name || 'Unknown Applicant'}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Applied for: {application.job?.title || 'Unknown Job'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className="mt-2 sm:flex sm:justify-between">
-                          <div className="sm:flex">
-                            <p className="flex items-center text-sm text-gray-500">
-                              {application.applicantName} • {application.applicantEmail}
-                            </p>
-                          </div>
-                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <p>
-                              Applied on {new Date(application.appliedAt).toLocaleDateString()}
-                            </p>
+                        <div className="flex items-center space-x-4">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              application.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : application.status === 'reviewed'
+                                ? 'bg-blue-100 text-blue-800'
+                                : application.status === 'interview'
+                                ? 'bg-purple-100 text-purple-800'
+                                : application.status === 'accepted'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {application.status === 'pending' && <ClockIcon className="w-3 h-3 mr-1" />}
+                            {application.status === 'accepted' && <CheckCircleIcon className="w-3 h-3 mr-1" />}
+                            {application.status === 'rejected' && <XCircleIcon className="w-3 h-3 mr-1" />}
+                            {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                          </span>
+                          <div className="flex space-x-1">
+                            {application.status !== 'accepted' && (
+                              <button
+                                onClick={() => handleUpdateApplicationStatus(application.id, 'accepted')}
+                                className="text-green-600 hover:text-green-900 p-1"
+                                title="Accept"
+                              >
+                                <CheckCircleIcon className="h-5 w-5" />
+                              </button>
+                            )}
+                            {application.status !== 'rejected' && (
+                              <button
+                                onClick={() => handleUpdateApplicationStatus(application.id, 'rejected')}
+                                className="text-red-600 hover:text-red-900 p-1"
+                                title="Reject"
+                              >
+                                <XCircleIcon className="h-5 w-5" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleUpdateApplicationStatus(application.id, 'interview')}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                              title="Schedule Interview"
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </button>
                           </div>
                         </div>
                       </div>
+                      <div className="mt-4 pl-13">
+                        <div className="text-sm text-gray-600">
+                          <p><strong>Email:</strong> {application.applicant?.email || 'N/A'}</p>
+                          <p><strong>Applied on:</strong> {new Date(application.createdAt).toLocaleDateString()}</p>
+                          {application.resume && (
+                            <p>
+                              <strong>Resume:</strong>
+                              <a
+                                href={`http://localhost:5000/uploads/resumes/${application.resume}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 ml-1"
+                              >
+                                View Resume
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </li>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No applications</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      You don't have any applications yet. When you do, they'll appear here.
-                    </p>
-                  </div>
-                )}
-              </ul>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center py-12">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No applications yet</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Applications for your job postings will appear here once candidates apply.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -28,7 +28,6 @@ const JobForm = () => {
     applicationDeadline: '',
   });
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -37,7 +36,6 @@ const JobForm = () => {
     }));
   };
 
-  // Handle skill addition
   const handleAddSkill = (e) => {
     e.preventDefault();
     if (formData.skillInput.trim() && !formData.skills.includes(formData.skillInput)) {
@@ -49,7 +47,6 @@ const JobForm = () => {
     }
   };
 
-  // Handle skill removal
   const handleRemoveSkill = (skillToRemove) => {
     setFormData(prev => ({
       ...prev,
@@ -57,7 +54,6 @@ const JobForm = () => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -80,14 +76,12 @@ const JobForm = () => {
     await dispatch(isEdit ? updateJob({ jobId: id, jobData }) : createJob(jobData));
   };
 
-  // Fetch job data for editing
   useEffect(() => {
     if (isEdit && id) {
       dispatch(fetchJobById(id));
     }
   }, [isEdit, id, dispatch]);
 
-  // Populate form with job data when editing
   useEffect(() => {
     if (isEdit && currentJob) {
       setFormData({
@@ -110,7 +104,6 @@ const JobForm = () => {
     }
   }, [isEdit, currentJob]);
 
-  // Reset form and redirect on success
   useEffect(() => {
     if (success) {
       dispatch(resetJobState());
@@ -118,7 +111,6 @@ const JobForm = () => {
     }
   }, [success, navigate, dispatch]);
 
-  // Show loading when fetching job data for edit
   if (isEdit && loading && !currentJob) {
     return (
       <div className="text-center py-12">
@@ -139,9 +131,7 @@ const JobForm = () => {
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Form fields */}
       <div className="space-y-4">
-        {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Job Title</label>
           <input
@@ -154,7 +144,6 @@ const JobForm = () => {
           />
         </div>
 
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Description</label>
           <textarea
@@ -167,7 +156,6 @@ const JobForm = () => {
           />
         </div>
 
-        {/* Location and Job Type */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Location</label>
@@ -197,7 +185,6 @@ const JobForm = () => {
           </div>
         </div>
 
-        {/* Salary Range */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Salary Range</label>
           <div className="flex space-x-4">
@@ -241,7 +228,6 @@ const JobForm = () => {
           </div>
         </div>
 
-        {/* Skills */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Skills</label>
           <div className="mt-1 flex rounded-md shadow-sm">
@@ -284,7 +270,6 @@ const JobForm = () => {
           </div>
         </div>
 
-        {/* Experience Level */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Experience Level</label>
           <select
@@ -299,7 +284,6 @@ const JobForm = () => {
           </select>
         </div>
 
-        {/* Remote Work */}
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -313,7 +297,6 @@ const JobForm = () => {
           </label>
         </div>
 
-        {/* Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Status</label>
           <select
@@ -328,7 +311,6 @@ const JobForm = () => {
           </select>
         </div>
 
-        {/* Application Deadline */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Application Deadline</label>
           <input
@@ -341,7 +323,6 @@ const JobForm = () => {
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="rounded-md bg-red-50 p-4">
           <div className="flex">
@@ -352,7 +333,6 @@ const JobForm = () => {
         </div>
       )}
 
-      {/* Submit Button */}
       <div className="flex justify-end">
         <button
           type="submit"

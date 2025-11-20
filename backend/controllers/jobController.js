@@ -24,11 +24,8 @@ exports.getJobs = async (req, res, next) => {
       sort = '-created_at',
     } = req.query;
 
-    // Handle array parameters from query string (Express converts arrays to param[] format)
     let jobTypes = Array.isArray(jobType) ? jobType : (req.query['jobType[]'] ? [req.query['jobType[]']].flat() : jobType);
     let experiences = Array.isArray(experience) ? experience : (req.query['experience[]'] ? [req.query['experience[]']].flat() : experience);
-
-    // Normalize job types and experience levels to match ENUM values
     const normalizeJobType = (type) => {
       const map = {
         'full-time': 'full-time',
@@ -36,7 +33,6 @@ exports.getJobs = async (req, res, next) => {
         'contract': 'contract',
         'internship': 'internship',
         'temporary': 'temporary',
-        // Handle capitalized versions from frontend
         'Full-time': 'full-time',
         'Part-time': 'part-time',
         'Contract': 'contract',
@@ -52,13 +48,12 @@ exports.getJobs = async (req, res, next) => {
         'senior': 'senior',
         'lead': 'lead',
         'executive': 'executive',
-        // Handle spaced versions from frontend
         'Entry Level': 'entry',
         'Mid Level': 'mid',
         'Senior': 'senior',
         'Lead': 'lead',
       };
-      return map[level] || level.toLowerCase().split(' ')[0]; // fallback to first word if not mapped
+      return map[level] || level.toLowerCase().split(' ')[0];
     };
 
     if (jobTypes) {
@@ -68,10 +63,9 @@ exports.getJobs = async (req, res, next) => {
     if (experiences) {
       experiences = Array.isArray(experiences) ? experiences.map(normalizeExperience) : normalizeExperience(experiences);
     }
-
     const offset = (page - 1) * limit;
     const order = [];
-    const where = { status: 'published' }; 
+    const where = { status: 'published' };
 
     if (sort) {
       const [field, direction] = sort.startsWith('-') 
@@ -80,7 +74,6 @@ exports.getJobs = async (req, res, next) => {
       
       order.push([field, direction]);
     }
-
     if (search) {
       where[Op.or] = [
         { title: { [Op.iLike]: `%${search}%` } },
@@ -88,7 +81,6 @@ exports.getJobs = async (req, res, next) => {
         { '$employer.name$': { [Op.iLike]: `%${search}%` } },
       ];
     }
-
     if (location) where.location = { [Op.iLike]: `%${location}%` };
     if (jobTypes) {
       if (Array.isArray(jobTypes)) {
@@ -151,7 +143,6 @@ exports.getJob = async (req, res, next) => {
     
     console.log('getJob called with ID:', jobId, 'Type:', typeof jobId);
     
-    // Validate job ID
     if (!jobId || jobId === 'undefined') {
       console.log('Job ID validation failed - ID is missing or undefined');
       return res.status(400).json({
@@ -159,16 +150,6 @@ exports.getJob = async (req, res, next) => {
         message: 'Job ID is required'
       });
     }
-
-    // Temporarily remove UUID validation to debug
-    // const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    // if (!uuidRegex.test(jobId)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: 'Invalid job ID format'
-    //   });
-    // }
-
     console.log('Attempting to find job with ID:', jobId);
     const job = await Job.findByPk(jobId, {
       include: [
@@ -284,11 +265,11 @@ exports.updateJob = async (req, res, next) => {
       throw new NotFoundError('Job not found');
     }
 
-    if (req.user.role !== 'admin' && job.employer_id !== req.user.id) {
+    if (req.user.role !== 'admin' && job.employerId !== req.user.id) {
       throw new ForbiddenError('Not authorized to update this job');
     }
 
-    const { employer_id, ...updateData } = req.body;
+    const { employerId, ...updateData } = req.body;
     
     await job.update(updateData);
 
@@ -309,7 +290,7 @@ exports.deleteJob = async (req, res, next) => {
       throw new NotFoundError('Job not found');
     }
 
-    if (req.user.role !== 'admin' && job.employer_id !== req.user.id) {
+    if (req.user.role !== 'admin' && job.employerId !== req.user.id) {
       throw new ForbiddenError('Not authorized to delete this job');
     }
 
@@ -344,8 +325,8 @@ exports.applyForJob = async (req, res, next) => {
     }
     const existingApplication = await Application.findOne({
       where: {
-        job_id: jobId,
-        user_id: userId,
+        jobId,
+        applicantId: userId,
       },
     });
 
@@ -375,11 +356,11 @@ exports.applyForJob = async (req, res, next) => {
     await resumeFile.mv(uploadPath);
 
     const application = await Application.create({
-      job_id: jobId,
-      user_id: userId,
+      jobId,
+      applicantId: userId,
       status: 'pending',
       resume: resumeFileName,
-      applied_at: new Date(),
+      createdAt: new Date(),
     });
 
     res.status(201).json({
@@ -398,7 +379,7 @@ exports.getJobsByEmployer = async (req, res, next) => {
     
     const jobs = await Job.findAll({
       where: {
-        employer_id: employerId,
+        employerId,
         status: 'active'
       },
       include: [
@@ -429,7 +410,7 @@ exports.getMyJobs = async (req, res, next) => {
     }
 
     const { status } = req.query;
-    const where = { employer_id: req.user.id };
+    const where = { employerId: req.user.id };
     
     if (status) {
       where.status = status;
@@ -437,12 +418,12 @@ exports.getMyJobs = async (req, res, next) => {
 
     const jobs = await Job.findAll({
       where,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       include: [
         {
           model: Application,
           as: 'applications',
-          attributes: ['id', 'status', 'created_at'],
+          attributes: ['id', 'status', 'createdAt'],
         },
       ],
     });

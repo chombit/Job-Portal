@@ -2,6 +2,36 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
+// Fetch applications for employer's jobs
+export const fetchJobApplications = createAsyncThunk(
+  'employer/fetchApplications',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Fetching employer applications...');
+      const response = await api.get('/applications/my-jobs');
+      console.log('Applications API Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch applications');
+    }
+  }
+);
+
+// Update application status
+export const updateApplicationStatus = createAsyncThunk(
+  'employer/updateApplicationStatus',
+  async ({ applicationId, status }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/applications/${applicationId}/status`, { status });
+      return { applicationId, status };
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      return rejectWithValue(error.response?.data?.message || 'Failed to update application status');
+    }
+  }
+);
+
 // Async thunks
 export const fetchEmployerProfile = createAsyncThunk(
   'employer/fetchProfile',
@@ -58,7 +88,9 @@ const employerSlice = createSlice({
   name: 'employer',
   initialState: {
     postedJobs: [],
+    applications: [],
     loading: false,
+    loadingApplications: false,
     error: null,
   },
   extraReducers: (builder) => {
@@ -92,6 +124,28 @@ const employerSlice = createSlice({
       .addCase(fetchPostedJobs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to fetch jobs';
+      })
+      // Fetch Applications
+      .addCase(fetchJobApplications.pending, (state) => {
+        state.loadingApplications = true;
+        state.error = null;
+      })
+      .addCase(fetchJobApplications.fulfilled, (state, action) => {
+        state.loadingApplications = false;
+        state.applications = action.payload.data || [];
+        state.error = null;
+      })
+      .addCase(fetchJobApplications.rejected, (state, action) => {
+        state.loadingApplications = false;
+        state.error = action.payload || 'Failed to fetch applications';
+      })
+      // Update Application Status
+      .addCase(updateApplicationStatus.fulfilled, (state, action) => {
+        const { applicationId, status } = action.payload;
+        const application = state.applications.find(app => app.id === applicationId);
+        if (application) {
+          application.status = status;
+        }
       });
   }
 });
