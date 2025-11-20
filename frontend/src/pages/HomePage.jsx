@@ -51,89 +51,141 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="py-12 bg-gray-50">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Jobs</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Featured Job Listings
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Browse through our latest job listings and find your next opportunity.
+          <div className="text-center">
+            <p className="text-sm uppercase tracking-widest text-blue-600 font-semibold">Built for Ambitious Careers</p>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold text-gray-900">
+              Navigate your next move with confidence
+            </h2>
+            <p className="mt-4 max-w-3xl mx-auto text-lg text-gray-500">
+              Discover companies hiring now, trending roles across industries, and insights that help you stand out.
             </p>
           </div>
 
-          <div className="mt-10">
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                      <div className="h-6 w-6 text-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[{
+              title: 'Fast-growing Teams',
+              highlight: '120+',
+              description: 'Vetted startups and enterprises interviewing this week.',
+              accent: 'from-indigo-500 via-blue-500 to-sky-400',
+              icon: (
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h7" />
+                </svg>
+              )
+            }, {
+              title: 'Hot Roles',
+              highlight: '27%',
+              description: 'Increase in remote-friendly offers across product & data.',
+              accent: 'from-purple-500 via-fuchsia-500 to-pink-500',
+              icon: (
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 15l6-6 4 4 7-7" />
+                </svg>
+              )
+            }, {
+              title: 'Candidate Wins',
+              highlight: '4.8/5',
+              description: 'Average satisfaction from talent hired via JobPortal.',
+              accent: 'from-emerald-500 via-teal-500 to-cyan-400',
+              icon: (
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              )
+            }].map((card) => (
+              <div key={card.title} className="relative overflow-hidden rounded-2xl bg-white shadow-lg">
+                <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${card.accent}`} />
+                <div className="relative p-8">
+                  <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br text-white shadow ${card.accent}">
+                    {card.icon}
+                  </div>
+                  <p className="mt-6 text-sm font-medium uppercase tracking-wide text-gray-600">{card.title}</p>
+                  <p className="mt-2 text-4xl font-extrabold text-gray-900">{card.highlight}</p>
+                  <p className="mt-3 text-gray-500">{card.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-16 grid gap-10 lg:grid-cols-2">
+            <div className="p-8 rounded-2xl bg-white shadow-md border border-gray-100">
+              <p className="text-sm font-semibold text-blue-600">Career Playbook</p>
+              <h3 className="mt-3 text-2xl font-bold text-gray-900">Three moves to land offers faster</h3>
+              <ul className="mt-6 space-y-4">
+                {[{
+                  title: 'Show up where hiring happens',
+                  desc: 'Personalized job alerts surface matching roles minutes after they go live.'
+                }, {
+                  title: 'Stand out with insights',
+                  desc: 'Company intel, salary benchmarks, and culture notes prepared for every listing.'
+                }, {
+                  title: 'Track momentum in one place',
+                  desc: 'Save roles, manage applications, and schedule interviews without leaving JobPortal.'
+                }].map((step, idx) => (
+                  <li key={step.title} className="flex">
+                    <div className="flex-shrink-0">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 font-semibold">
+                        0{idx + 1}
+                      </span>
                     </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Senior Developer</dt>
-                        <dd>
-                          <div className="text-lg font-medium text-gray-900">Tech Corp Inc.</div>
-                        </dd>
-                      </dl>
+                    <div className="ml-4">
+                      <p className="text-base font-semibold text-gray-900">{step.title}</p>
+                      <p className="text-sm text-gray-500">{step.desc}</p>
                     </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span>Full-time</span>
-                      <span className="mx-1">•</span>
-                      <span>Remote</span>
-                      <span className="mx-1">•</span>
-                      <span>$90k - $120k</span>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      JavaScript
-                    </span>
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      React
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <Link
-                      to="/jobs/1"
-                      className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    >
-                      View job<span aria-hidden="true"> &rarr;</span>
-                    </Link>
-                  </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl">
+              <p className="text-sm uppercase tracking-widest text-blue-100">What candidates say</p>
+              <blockquote className="mt-6">
+                <p className="text-2xl font-semibold leading-relaxed">
+                  “I discovered roles I didn’t even know existed and had three interviews scheduled within days.”
+                </p>
+                <footer className="mt-6">
+                  <p className="font-semibold">Nora Mendez</p>
+                  <p className="text-sm text-blue-100">Product Designer @ Aurora Labs</p>
+                </footer>
+              </blockquote>
+              <div className="mt-8 grid grid-cols-2 gap-6 text-left">
+                <div>
+                  <p className="text-3xl font-bold">48 hrs</p>
+                  <p className="text-sm text-blue-100">Average time to first recruiter response</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">87%</p>
+                  <p className="text-sm text-blue-100">Applicants interviewed through JobPortal</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-10 text-center">
-            <Link
-              to="/jobs"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              View all jobs
-            </Link>
+          <div className="mt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-lg font-semibold text-gray-900">Ready to explore handpicked roles?</p>
+              <p className="text-sm text-gray-500">Browse curated opportunities or create alerts tailored to you.</p>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                to="/jobs"
+                className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Browse openings
+              </Link>
+              <Link
+                to="/register"
+                className="inline-flex items-center px-5 py-3 border border-blue-200 text-base font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50"
+              >
+                Create alerts
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
   );
 };

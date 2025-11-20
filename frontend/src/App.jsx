@@ -13,7 +13,7 @@ import JobSeekerDashboard from './pages/dashboard/jobseeker/JobSeekerDashboard';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
 import PrivateRoute from './components/routing/PrivateRoute';
 import PublicRoute from './components/routing/PublicRoute';
-import TestPage from './pages/TestPage';
+
 
 function App() {
   return (
@@ -21,7 +21,6 @@ function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Layout />}>
-        <Route path="test" element={<TestPage />} />
         <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
           <Route index element={<HomePage />} />
@@ -41,7 +40,7 @@ function App() {
           <Route path="/employer" element={<DashboardLayout />}>
             <Route index element={<EmployerDashboard />} />
             <Route path="jobs/new" element={<JobForm />} />
-            <Route path="jobs/:id/edit" element={<JobForm />} />
+            <Route path="jobs/:id/edit" element={<JobForm />} />           
           </Route>
         </Route>
 
