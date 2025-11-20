@@ -24,6 +24,51 @@ exports.getJobs = async (req, res, next) => {
       sort = '-created_at',
     } = req.query;
 
+    // Handle array parameters from query string (Express converts arrays to param[] format)
+    let jobTypes = Array.isArray(jobType) ? jobType : (req.query['jobType[]'] ? [req.query['jobType[]']].flat() : jobType);
+    let experiences = Array.isArray(experience) ? experience : (req.query['experience[]'] ? [req.query['experience[]']].flat() : experience);
+
+    // Normalize job types and experience levels to match ENUM values
+    const normalizeJobType = (type) => {
+      const map = {
+        'full-time': 'full-time',
+        'part-time': 'part-time',
+        'contract': 'contract',
+        'internship': 'internship',
+        'temporary': 'temporary',
+        // Handle capitalized versions from frontend
+        'Full-time': 'full-time',
+        'Part-time': 'part-time',
+        'Contract': 'contract',
+        'Internship': 'internship',
+      };
+      return map[type] || type.toLowerCase();
+    };
+
+    const normalizeExperience = (level) => {
+      const map = {
+        'entry': 'entry',
+        'mid': 'mid',
+        'senior': 'senior',
+        'lead': 'lead',
+        'executive': 'executive',
+        // Handle spaced versions from frontend
+        'Entry Level': 'entry',
+        'Mid Level': 'mid',
+        'Senior': 'senior',
+        'Lead': 'lead',
+      };
+      return map[level] || level.toLowerCase().split(' ')[0]; // fallback to first word if not mapped
+    };
+
+    if (jobTypes) {
+      jobTypes = Array.isArray(jobTypes) ? jobTypes.map(normalizeJobType) : normalizeJobType(jobTypes);
+    }
+
+    if (experiences) {
+      experiences = Array.isArray(experiences) ? experiences.map(normalizeExperience) : normalizeExperience(experiences);
+    }
+
     const offset = (page - 1) * limit;
     const order = [];
     const where = { status: 'published' }; 
@@ -45,8 +90,20 @@ exports.getJobs = async (req, res, next) => {
     }
 
     if (location) where.location = { [Op.iLike]: `%${location}%` };
-    if (jobType) where.job_type = jobType;
-    if (experience) where.experience_level = experience;
+    if (jobTypes) {
+      if (Array.isArray(jobTypes)) {
+        where.job_type = { [Op.in]: jobTypes };
+      } else {
+        where.job_type = jobTypes;
+      }
+    }
+    if (experiences) {
+      if (Array.isArray(experiences)) {
+        where.experience_level = { [Op.in]: experiences };
+      } else {
+        where.experience_level = experiences;
+      }
+    }
     if (isRemote !== undefined) where.is_remote = isRemote === 'true';
     
     if (minSalary || maxSalary) {

@@ -33,24 +33,62 @@ const JobListingsPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Handle search
+    // Apply current filters and search term
+    applyFilters(filters);
+  };
+
+  const applyFilters = (currentFilters) => {
+    // Build search parameters
+    const params = {};
+    
+    if (searchTerm.trim()) {
+      params.search = searchTerm.trim();
+    }
+    
+    if (currentFilters.location) {
+      params.location = currentFilters.location;
+    }
+    
+    if (currentFilters.jobType.length > 0) {
+      params.jobType = currentFilters.jobType;
+    }
+    
+    if (currentFilters.experience.length > 0) {
+      params.experience = currentFilters.experience;
+    }
+    
+    if (currentFilters.salaryRange) {
+      const [min, max] = currentFilters.salaryRange.split('-');
+      if (min && min !== '0') params.minSalary = min;
+      if (max && max !== '+') params.maxSalary = max.replace('+', '');
+    }
+    
+    // Dispatch search with parameters
+    dispatch(fetchJobs(params));
   };
 
   const handleFilterChange = (e) => {
     const { name, value, checked } = e.target;
+    let newFilters;
+    
     if (name === 'jobType' || name === 'experience') {
-      setFilters((prev) => ({
-        ...prev,
+      newFilters = {
+        ...filters,
         [name]: checked
-          ? [...prev[name], value]
-          : prev[name].filter((item) => item !== value),
-      }));
+          ? [...filters[name], value]
+          : filters[name].filter((item) => item !== value),
+      };
     } else {
-      setFilters((prev) => ({
-        ...prev,
+      newFilters = {
+        ...filters,
         [name]: value,
-      }));
+      };
     }
+    
+    setFilters(newFilters);
+    
+    // Auto-filter when any filter changes
+    applyFilters(newFilters);
   };
 
   const clearFilters = () => {
@@ -60,6 +98,9 @@ const JobListingsPage = () => {
       location: '',
       salaryRange: '',
     });
+    setSearchTerm('');
+    // Reset to fetch all jobs
+    dispatch(fetchJobs());
   };
 
   return (
@@ -94,7 +135,7 @@ const JobListingsPage = () => {
           </form>
           
           {/* Filter Toggle */}
-          <div className="mt-4">
+          <div className="mt-4 flex gap-4">
             <button
               type="button"
               className="inline-flex items-center text-sm font-medium text-blue-100 hover:text-white"
@@ -102,6 +143,15 @@ const JobListingsPage = () => {
             >
               {showFilters ? 'Hide filters' : 'Show filters'}
             </button>
+            {(searchTerm || filters.jobType.length > 0 || filters.experience.length > 0 || filters.location || filters.salaryRange) && (
+              <button
+                type="button"
+                className="inline-flex items-center text-sm font-medium text-blue-100 hover:text-white"
+                onClick={clearFilters}
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -140,7 +190,7 @@ const JobListingsPage = () => {
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`job-type-${type}`} className="ml-2 text-sm text-gray-700">
-                          {type}
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
                         </label>
                       </div>
                     ))}
@@ -151,7 +201,7 @@ const JobListingsPage = () => {
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Experience Level</h3>
                   <div className="space-y-2">
-                    {['Entry Level', 'Mid Level', 'Senior', 'Lead'].map((level) => (
+                    {['entry', 'mid', 'senior', 'lead'].map((level) => (
                       <div key={level} className="flex items-center">
                         <input
                           id={`exp-${level}`}
@@ -199,6 +249,15 @@ const JobListingsPage = () => {
                     <option value="150000+">$150,000+</option>
                   </select>
                 </div>
+                
+                {/* Clear Filters Button */}
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Clear Filters
+                </button>
               </div>
             </div>
           )}

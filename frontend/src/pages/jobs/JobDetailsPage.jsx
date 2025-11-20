@@ -82,42 +82,78 @@ const JobDetailsPage = () => {
   if (!job) return <div className="text-center py-12">Job not found</div>;
 
   return (
-    <div className="py-12 bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Jobs
+        </button>
+
         {/* Job Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
-              <div className="flex items-center text-gray-600 mb-4">
-                <FaBuilding className="mr-2" />
-                <span className="mr-4">{job.employer?.name}</span>
-                <FaMapMarkerAlt className="mr-2" />
-                <span>{job.location}</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                  {job.jobType}
-                </span>
-                <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
-                  {job.experienceLevel || 'Any experience'}
-                </span>
-                {job.isRemote && (
-                  <span className="bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full">
-                    Remote
-                  </span>
-                )}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8 hover:shadow-xl transition-shadow duration-300">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FaBriefcase className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-3 leading-tight">{job.title}</h1>
+                  <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-4">
+                    <div className="flex items-center">
+                      <FaBuilding className="mr-2 text-blue-500" />
+                      <span className="font-medium">{job.employer?.name}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaMapMarkerAlt className="mr-2 text-blue-500" />
+                      <span>{job.location}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaClock className="mr-2 text-blue-500" />
+                      <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                      <FaBriefcase className="mr-2" />
+                      {job.jobType?.charAt(0).toUpperCase() + job.jobType?.slice(1)}
+                    </span>
+                    <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {job.experienceLevel ? job.experienceLevel.charAt(0).toUpperCase() + job.experienceLevel.slice(1) + ' Level' : 'Any Experience'}
+                    </span>
+                    {job.isRemote && (
+                      <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        Remote Work
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mt-4 md:mt-0">
-              <div className="text-2xl font-bold text-blue-600">
-                {job.salaryRange?.min ? `$${job.salaryRange.min}` : 'Negotiable'}
-                {job.salaryRange?.max && ` - $${job.salaryRange.max}`}
-                {job.salaryRange?.period && ` / ${job.salaryRange.period}`}
-              </div>
-              <div className="text-gray-500 text-sm mt-1">
-                <FaClock className="inline mr-1" />
-                Posted {new Date(job.createdAt).toLocaleDateString()}
+            <div className="lg:text-right">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {job.salaryRange?.min ? (
+                  <div>
+                    <span className="text-4xl">${job.salaryRange.min.toLocaleString()}</span>
+                    {job.salaryRange?.max && (
+                      <span className="text-2xl text-gray-500"> - ${job.salaryRange.max.toLocaleString()}</span>
+                    )}
+                    {job.salaryRange?.period && (
+                      <div className="text-sm text-gray-500 font-normal">per {job.salaryRange.period}</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-2xl">Salary Negotiable</div>
+                )}
               </div>
             </div>
           </div>
