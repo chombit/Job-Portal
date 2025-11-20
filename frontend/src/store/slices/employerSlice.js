@@ -1,8 +1,6 @@
-// src/store/slices/employerSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
-// Fetch applications for employer's jobs
 export const fetchJobApplications = createAsyncThunk(
   'employer/fetchApplications',
   async (_, { rejectWithValue }) => {
@@ -18,7 +16,6 @@ export const fetchJobApplications = createAsyncThunk(
   }
 );
 
-// Update application status
 export const updateApplicationStatus = createAsyncThunk(
   'employer/updateApplicationStatus',
   async ({ applicationId, status }, { rejectWithValue }) => {
@@ -32,7 +29,6 @@ export const updateApplicationStatus = createAsyncThunk(
   }
 );
 
-// Async thunks
 export const fetchEmployerProfile = createAsyncThunk(
   'employer/fetchProfile',
   async (_, { rejectWithValue }) => {
@@ -95,7 +91,6 @@ const employerSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Profile
       .addCase(fetchEmployerProfile.pending, (state) => {
         console.log('Fetching employer profile...');
         state.loading = true;
@@ -111,7 +106,6 @@ const employerSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Posted Jobs
       .addCase(fetchPostedJobs.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -125,7 +119,6 @@ const employerSlice = createSlice({
         state.loading = false;
         state.error = action.payload || 'Failed to fetch jobs';
       })
-      // Fetch Applications
       .addCase(fetchJobApplications.pending, (state) => {
         state.loadingApplications = true;
         state.error = null;
@@ -139,7 +132,6 @@ const employerSlice = createSlice({
         state.loadingApplications = false;
         state.error = action.payload || 'Failed to fetch applications';
       })
-      // Update Application Status
       .addCase(updateApplicationStatus.fulfilled, (state, action) => {
         const { applicationId, status } = action.payload;
         const application = state.applications.find(app => app.id === applicationId);

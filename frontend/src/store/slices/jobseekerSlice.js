@@ -1,8 +1,6 @@
-// src/store/slices/jobseekerSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Async thunks
 export const fetchJobSeekerProfile = createAsyncThunk(
   'jobseeker/fetchProfile',
   async (_, { rejectWithValue }) => {

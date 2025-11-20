@@ -47,15 +47,15 @@ export const fetchJobById = createAsyncThunk(
   'jobs/fetchById',
   async (jobId, { rejectWithValue }) => {
     try {
-      console.log('Fetching job with ID in thunk:', jobId); // Debug log
+      console.log('Fetching job with ID in thunk:', jobId); 
       if (!jobId) {
         throw new Error('Job ID is required');
       }
       const response = await jobService.getJob(jobId);
-      // Extract the actual job data from the response
+      
       return response.data || response;
     } catch (error) {
-      console.error('Error in fetchJobById thunk:', error); // Debug log
+      console.error('Error in fetchJobById thunk:', error); 
       return rejectWithValue(error.message);
     }
   }
@@ -135,7 +135,6 @@ const jobSlice = createSlice({
     builder.addCase(updateJob.fulfilled, (state, action) => {
       state.loading = false;
       state.success = true;
-      // Update the job in the jobs array if it exists there
       const index = state.jobs.findIndex(job => job.id === action.payload.id);
       if (index !== -1) {
         state.jobs[index] = action.payload;

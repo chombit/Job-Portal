@@ -7,7 +7,7 @@ getJobs: async (params = {}) => {
   try {
     console.log('Fetching jobs with params:', params);
     const response = await api.get(API_ENDPOINT, { params });
-    console.log('API Response:', response); // Log full response
+    console.log('API Response:', response); 
     return response.data;
   } catch (error) {
     console.error('Error fetching jobs:', {
