@@ -1,7 +1,6 @@
 const { check } = require('express-validator');
 const { validationResult } = require('express-validator');
 
-// Validation middleware
 const validate = (validations) => {
   return async (req, res, next) => {
     await Promise.all(validations.map(validation => validation.run(req)));
@@ -18,7 +17,6 @@ const validate = (validations) => {
   };
 };
 
-// Validation rules
 const validateLogin = [
   check('email').isEmail().normalizeEmail(),
   check('password').not().isEmpty()

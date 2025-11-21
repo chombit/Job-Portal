@@ -9,7 +9,6 @@ const JobSeekerDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  // Fetch job seeker data and featured jobs
   useEffect(() => {
     const fetchJobSeekerData = async () => {
       try {

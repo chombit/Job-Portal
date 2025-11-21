@@ -66,8 +66,6 @@ const Layout = () => {
                       <span className="sr-only">View notifications</span>
                       <BellIcon className="h-6 w-6" aria-hidden="true" />
                     </button>
-
-                    {/* Profile dropdown */}
                     <Menu as="div" className="ml-3 relative">
                       <div>
                         <Menu.Button className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">

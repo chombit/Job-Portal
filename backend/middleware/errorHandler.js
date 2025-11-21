@@ -4,12 +4,10 @@ const { JsonWebTokenError, TokenExpiredError } = require('jsonwebtoken');
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
 
-  // Default error response
   let statusCode = 500;
   let message = 'Internal Server Error';
   let errors = null;
 
-  // Handle different types of errors
   if (err instanceof ValidationError) {
     statusCode = 400;
     message = 'Validation Error';
@@ -28,12 +26,10 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 401;
     message = 'Token expired';
   } else if (err.statusCode) {
-    // Handle custom errors with statusCode property
+  
     statusCode = err.statusCode;
     message = err.message;
   }
-
-  // Send error response
   res.status(statusCode).json({
     success: false,
     message,

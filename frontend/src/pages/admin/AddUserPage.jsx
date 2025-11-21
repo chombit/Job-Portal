@@ -1,4 +1,3 @@
-// In src/pages/admin/AddUserPage.jsx
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -23,7 +22,7 @@ const AddUserPage = () => {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      role: 'job_seeker' // Set default role
+      role: 'job_seeker' 
     }
   });
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,6 @@ const AddUserPage = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      // Format the data according to your API requirements
       const userData = {
         name: data.name,
         email: data.email,

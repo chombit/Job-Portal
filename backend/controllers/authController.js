@@ -7,7 +7,7 @@ const generateToken = (id, role, isActive = true) => {
     { 
       id, 
       role, 
-      isActive: isActive !== false // Ensure isActive is always a boolean, default to true
+      isActive: isActive !== false 
     }, 
     process.env.JWT_SECRET, 
     {
