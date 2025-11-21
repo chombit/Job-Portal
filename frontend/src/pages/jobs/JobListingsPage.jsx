@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { SearchIcon } from '@heroicons/react/outline';
+import { MagnifyingGlassIcon as SearchIcon } from '@heroicons/react/24/outline';
 import { fetchJobs } from '../../store/slices/jobSlice';
 import JobCard from '../../components/jobs/JobCard';
 

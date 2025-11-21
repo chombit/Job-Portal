@@ -7,6 +7,16 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      field: 'user_id',
+    },
+    jobId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      field: 'job_id',
+    },
     notes: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -17,7 +27,17 @@ module.exports = (sequelize) => {
     underscored: true,
   });
 
-  // No need for associations here as they're defined in User and Job models
-  
+  SavedJob.associate = (models) => {
+    SavedJob.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user',
+    });
+
+    SavedJob.belongsTo(models.Job, {
+      foreignKey: 'jobId',
+      as: 'job',
+    });
+  };
+
   return SavedJob;
 };

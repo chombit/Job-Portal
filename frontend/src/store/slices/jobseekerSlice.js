@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import api from '../../utils/api';
 
 export const fetchJobSeekerProfile = createAsyncThunk(
   'jobseeker/fetchProfile',
@@ -9,6 +10,31 @@ export const fetchJobSeekerProfile = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch profile');
+    }
+  }
+);
+
+export const fetchJobSeekerOverview = createAsyncThunk(
+  'jobseeker/fetchOverview',
+  async (_, { rejectWithValue }) => {
+    try {
+      const [applicationsRes, savedJobsRes] = await Promise.all([
+        api.get('/applications/me'),
+      ]);
+
+      return {
+        applications: applicationsRes.data?.data || applicationsRes.data || [],
+      };
+    } catch (error) {
+      console.error('Error fetching job seeker overview:', error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to load applications');
     }
   }
 );
@@ -39,6 +65,18 @@ const jobseekerSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(fetchJobSeekerProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchJobSeekerOverview.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchJobSeekerOverview.fulfilled, (state, action) => {
+        state.loading = false;
+        state.applications = action.payload.applications;
+      })
+      .addCase(fetchJobSeekerOverview.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

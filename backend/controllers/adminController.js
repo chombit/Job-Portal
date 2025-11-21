@@ -147,3 +147,61 @@ exports.updateUserStatus = async (req, res, next) => {
     next(error);
   }
 };
+exports.createUser = async (req, res, next) => {
+  try {
+    const { name, email, password, role, company } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role,
+      company: role === 'employer' ? company : null,
+      isActive: true // Automatically activate admin-created users
+    });
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user.get({ plain: true });
+    
+    res.status(201).json({
+      success: true,
+      data: userWithoutPassword
+    });
+  } catch (error) {
+    console.error('Error in createUser:', error);
+    next(error);
+  }
+};
+// In adminController.js
+exports.updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, isActive } = req.body;
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    if (role) user.role = role;
+    if (isActive !== undefined) user.isActive = isActive;
+
+    await user.save();
+
+    // Remove password from response
+    const { password, ...userData } = user.get({ plain: true });
+    res.status(200).json(userData);
+  } catch (error) {
+    next(error);
+  }
+};

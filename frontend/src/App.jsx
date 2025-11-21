@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './layouts/Layout';
 import HomePage from './pages/HomePage';
@@ -11,44 +11,75 @@ import DashboardLayout from './layouts/DashboardLayout';
 import EmployerDashboard from './pages/dashboard/employer/EmployerDashboard';
 import JobSeekerDashboard from './pages/dashboard/jobseeker/JobSeekerDashboard';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
+import UsersList from './pages/admin/UsersList';
+import JobsList from './pages/admin/JobsList';
+import AdminLayout from './layouts/AdminLayout';
+import PendingApprovals from './pages/admin/PendingApprovals';
 import PrivateRoute from './components/routing/PrivateRoute';
 import PublicRoute from './components/routing/PublicRoute';
-
+import ProfilePage from './pages/ProfilePage';
+import AddUserPage from './pages/admin/AddUserPage';
 
 function App() {
   return (
     <Router>
       <Toaster position="top-right" />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Layout />}>
-        <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
           <Route index element={<HomePage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
           <Route path="jobs" element={<JobListingsPage />} />
           <Route path="jobs/:id" element={<JobDetailsPage />} />
-          
-          
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
-        <Route element={<PrivateRoute allowedRoles={['job_seeker']} />}>
-          <Route path="/job-seeker" element={<DashboardLayout />}>
-            <Route index element={<JobSeekerDashboard />} />
-          </Route>
+        {/* Admin Routes */}
+        <Route
+          path="/admin/*"
+          element={
+            <PrivateRoute roles={['admin']}>
+              <AdminLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UsersList />} />
+          <Route path="users/new" element={<AddUserPage />} />
+          <Route path="jobs" element={<JobsList />} />
+          <Route path="approvals/pending" element={<PendingApprovals />} />
         </Route>
 
-        <Route element={<PrivateRoute allowedRoles={['employer']} />}>
-          <Route path="/employer" element={<DashboardLayout />}>
-            <Route index element={<EmployerDashboard />} />
-            <Route path="jobs/new" element={<JobForm />} />
-            <Route path="jobs/:id/edit" element={<JobForm />} />           
-          </Route>
+        {/* Job Seeker Routes */}
+        <Route
+          path="/job-seeker/*"
+          element={
+            <PrivateRoute roles={['job_seeker']}>
+              <DashboardLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<JobSeekerDashboard />} />
         </Route>
 
-        <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-          <Route path="/admin" element={<DashboardLayout />}>
-            <Route index element={<AdminDashboard />} />     
-          </Route>
+        {/* Employer Routes */}
+        <Route
+          path="/employer/*"
+          element={
+            <PrivateRoute roles={['employer']}>
+              <DashboardLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<EmployerDashboard />} />
+          <Route path="jobs/new" element={<JobForm />} />
+          <Route path="jobs/:id/edit" element={<JobForm />} />
+          <Route path="jobs/edit/:id" element={<Navigate to=".." replace />} />
         </Route>
+
+        {/* Catch-all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

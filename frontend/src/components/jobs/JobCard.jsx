@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteJob } from '../../store/slices/jobSlice';
-import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { PencilIcon,TrashIcon} from '@heroicons/react/24/outline';
 
-const JobCard = ({ job, onEdit, isEmployer = false }) => {
+const JobCard = ({ job, onEdit }) => {
   const jobId = job?.id || job?._id;
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);

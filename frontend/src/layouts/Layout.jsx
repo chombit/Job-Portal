@@ -1,10 +1,10 @@
 import { Fragment } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { 
-  MenuIcon as Bars3Icon, 
+  Bars3Icon, 
   BellIcon, 
-  XIcon as XMarkIcon 
-} from '@heroicons/react/outline';
+  XMarkIcon 
+} from '@heroicons/react/24/outline';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
@@ -18,7 +18,6 @@ const Layout = () => {
 
   const navigation = [
     { name: 'Find Jobs', href: '/jobs', current: location.pathname === '/jobs' },
-    { name: 'Companies', href: '/companies', current: location.pathname === '/companies' },
   ];
 
   return (

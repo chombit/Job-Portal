@@ -186,36 +186,42 @@ const JobDetailsPage = () => {
               <h3 className="text-lg font-semibold mb-4">Apply for this position</h3>
               
               {isAuthenticated && user.role === 'job_seeker' ? (
-                <form onSubmit={handleApply}>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="resume">
-                      Upload Resume (PDF/DOCX)
-                    </label>
-                    <input
-                      type="file"
-                      id="resume"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleResumeChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                    {resume && (
-                      <p className="mt-2 text-sm text-green-600">
-                        <FaFileAlt className="inline mr-1" />
-                        {resume.name}
-                      </p>
-                    )}
+                job?.hasApplied ? (
+                  <div className="text-center text-green-600 font-medium">
+                    You have already applied for this job.
                   </div>
-                  <button
-                    type="submit"
-                    disabled={isApplying}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors ${
-                      isApplying ? 'opacity-70 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {isApplying ? 'Applying...' : 'Apply Now'}
-                  </button>
-                </form>
+                ) : (
+                  <form onSubmit={handleApply}>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="resume">
+                        Upload Resume (PDF/DOCX)
+                      </label>
+                      <input
+                        type="file"
+                        id="resume"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                      {resume && (
+                        <p className="mt-2 text-sm text-green-600">
+                          <FaFileAlt className="inline mr-1" />
+                          {resume.name}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isApplying}
+                      className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors ${
+                        isApplying ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isApplying ? 'Applying...' : 'Apply Now'}
+                    </button>
+                  </form>
+                )
               ) : (
                 <div className="text-center">
                   <p className="mb-4">Please log in as a job seeker to apply for this position.</p>

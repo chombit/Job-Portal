@@ -18,11 +18,11 @@ router.put('/auth/updatepassword', auth, authController.updatePassword);
 
 // Job routes
 router.get('/jobs', jobController.getJobs);
+router.get('/jobs/my-jobs', auth, jobController.getMyJobs);
 router.get('/jobs/:id', jobController.getJob);
 router.post('/jobs', auth, authorize('employer', 'admin'), jobController.createJob);
 router.put('/jobs/:id', auth, jobController.updateJob);
 router.delete('/jobs/:id', auth, jobController.deleteJob);
-router.get('/jobs/my-jobs', auth, jobController.getMyJobs);
 
 
 // Application routes
@@ -43,10 +43,13 @@ router.get('/jobs/:jobId/is-saved', auth, savedJobController.checkIfJobIsSaved);
 router.get('/admin/dashboard/stats', auth, authorize('admin'), adminController.getDashboardStats);
 router.get('/admin/users/recent', auth, authorize('admin'), adminController.getRecentUsers);
 router.get('/admin/users', auth, authorize('admin'), adminController.getAllUsers);
+router.get('/admin/users/:id', auth, authorize('admin'), adminController.createUser);
 router.get('/admin/jobs/recent', auth, authorize('admin'), adminController.getRecentJobs);
 router.get('/admin/jobs', auth, authorize('admin'), adminController.getAllJobs);
 router.get('/admin/approvals/pending', auth, authorize('admin'), adminController.getPendingApprovals);
 router.put('/admin/jobs/:id/status', auth, authorize('admin'), adminController.updateJobStatus);
 router.put('/admin/users/:id/status', auth, authorize('admin'), adminController.updateUserStatus);
+router.put('/admin/users/:id', auth, authorize('admin'), adminController.updateUser);
+
 
 module.exports = router;

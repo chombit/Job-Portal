@@ -1,8 +1,9 @@
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
-const { Job, User, Application } = require('../models');
+const { Job, User, Application, SavedJob, sequelize } = require('../models');
 const { AppError, NotFoundError, ForbiddenError } = require('../middleware/errorHandler');
+const { verifyToken } = require('../utils/jwt');
 
 const uploadsDir = path.join(__dirname, '../uploads/resumes');
 if (!fs.existsSync(uploadsDir)) {
@@ -178,6 +179,19 @@ exports.getJob = async (req, res, next) => {
       });
     }
 
+    if (!req.user) {
+      const authHeader = req.header('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+          const decoded = verifyToken(token);
+          req.user = { id: decoded.id, role: decoded.role };
+        } catch (err) {
+          console.warn('Optional auth decode failed:', err.message);
+        }
+      }
+    }
+
     if (job.status !== 'published' && 
         (!req.user || (req.user.role !== 'admin' && job.employerId !== req.user.id))) {
       return res.status(404).json({
@@ -186,9 +200,25 @@ exports.getJob = async (req, res, next) => {
       });
     }
 
+    let hasApplied = false;
+
+    if (req.user?.role === 'job_seeker') {
+      const existingApplication = await Application.findOne({
+        where: {
+          jobId: job.id,
+          applicantId: req.user.id,
+        },
+      });
+
+      hasApplied = Boolean(existingApplication);
+    }
+
+    const jobData = job.toJSON();
+    jobData.hasApplied = hasApplied;
+
     return res.status(200).json({
       success: true,
-      data: job,
+      data: jobData,
     });
     
   } catch (error) {
@@ -294,7 +324,11 @@ exports.deleteJob = async (req, res, next) => {
       throw new ForbiddenError('Not authorized to delete this job');
     }
 
-    await job.destroy();
+    await sequelize.transaction(async (transaction) => {
+      await Application.destroy({ where: { jobId: job.id }, transaction });
+      await SavedJob.destroy({ where: { jobId: job.id }, transaction });
+      await job.destroy({ transaction });
+    });
 
     res.status(200).json({
       success: true,

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/admin';
+const API_URL = 'http://localhost:5000/api';  // Removed /admin from here
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -9,7 +9,7 @@ const getAuthHeader = () => {
 
 const getDashboardStats = async () => {
   try {
-    const response = await axios.get(`${API_URL}/dashboard/stats`, {
+    const response = await axios.get(`${API_URL}/admin/dashboard/stats`, {
       headers: getAuthHeader()
     });
     return response.data;
@@ -21,7 +21,7 @@ const getDashboardStats = async () => {
 
 const getRecentUsers = async () => {
   try {
-    const response = await axios.get(`${API_URL}/users/recent`, {
+    const response = await axios.get(`${API_URL}/admin/users/recent`, {
       headers: getAuthHeader()
     });
     return response.data;
@@ -33,7 +33,7 @@ const getRecentUsers = async () => {
 
 const getRecentJobs = async () => {
   try {
-    const response = await axios.get(`${API_URL}/jobs/recent`, {
+    const response = await axios.get(`${API_URL}/admin/jobs/recent`, {
       headers: getAuthHeader()
     });
     return response.data;
@@ -44,25 +44,62 @@ const getRecentJobs = async () => {
 };
 
 const getAllUsers = async () => {
-  const response = await axios.get(`${API_URL}/users`, {
-    headers: getAuthHeader()
-  });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/admin/users`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all users:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 const getAllJobs = async () => {
-  const response = await axios.get(`${API_URL}/jobs`, {
-    headers: getAuthHeader()
-  });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/admin/jobs`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all jobs:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 const getPendingApprovals = async () => {
-  const response = await axios.get(`${API_URL}/approvals/pending`, {
-    headers: getAuthHeader()
-  });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/admin/approvals/pending`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching pending approvals:', error.response?.data || error.message);
+    throw error;
+  }
 };
+const createUser = async (userData) => {
+  try {
+    const response = await axios.post(`${API_URL}/admin/users`, userData, {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+};
+const updateUser= async (userId, userData) => {
+  try {
+    const response = await api.put(`/admin/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+}
 
 const adminService = {
   getDashboardStats,
@@ -71,6 +108,8 @@ const adminService = {
   getAllUsers,
   getAllJobs,
   getPendingApprovals,
+  createUser,
+  updateUser,
 };
 
 export default adminService;

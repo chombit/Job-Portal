@@ -54,31 +54,126 @@ exports.applyForJob = async (req, res, next) => {
 };
 exports.getMyApplications = async (req, res, next) => {
   try {
-    const applications = await Application.findAll({
-      where: { applicantId: req.user.id },
-      include: [
-        {
-          model: Job,
-          as: 'job',
-          include: [
-            {
-              model: User,
-              as: 'employer',
-              attributes: ['id', 'name', 'profile_data'],
-            },
-          ],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
-    });
+    console.log('Fetching applications for user:', req.user.id);
+    
+    // First, verify the user exists
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      console.error('User not found:', req.user.id);
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
-    res.status(200).json({
+    // Log database connection info
+    console.log('Database connection status:', Application.sequelize.connectionManager.pool);
+    
+    // Get applications with detailed error handling
+    let applications;
+    try {
+      applications = await Application.findAll({
+        where: { applicantId: req.user.id },
+        include: [
+          {
+            model: Job,
+            as: 'job',
+            required: false, // Use LEFT JOIN to include applications even if job is deleted
+            include: [
+              {
+                model: User,
+                as: 'employer',
+                attributes: ['id', 'name', 'profileData'],
+                required: false, // Use LEFT JOIN to include job even if employer is deleted
+              },
+            ],
+          },
+        ],
+        order: [['createdAt', 'DESC']],
+      });
+      console.log('Raw applications from DB:', JSON.stringify(applications, null, 2));
+    } catch (dbError) {
+      console.error('Database error in getMyApplications:', {
+        message: dbError.message,
+        name: dbError.name,
+        stack: dbError.stack,
+        original: dbError.original
+      });
+      throw new Error(`Database error: ${dbError.message}`);
+    }
+
+    // Safely transform the data
+    const formattedApplications = applications.map(app => {
+      try {
+        return {
+          id: app.id,
+          status: app.status || 'pending',
+          appliedDate: app.createdAt,
+          job: app.job ? {
+            id: app.job.id,
+            title: app.job.title || 'Unknown Position',
+            location: app.job.location || 'Location not specified',
+            employer: app.job.employer ? {
+              id: app.job.employer.id,
+              name: app.job.employer.name || 'Unknown Company',
+              profileData: app.job.employer.profileData || {}
+            } : {
+              id: 'unknown',
+              name: 'Unknown Company',
+              profileData: {}
+            }
+          } : {
+            id: 'deleted-job',
+            title: 'Job no longer available',
+            location: 'N/A',
+            employer: {
+              id: 'unknown',
+              name: 'Unknown Company',
+              profileData: {}
+            }
+          }
+        };
+      } catch (transformError) {
+        console.error('Error transforming application:', {
+          applicationId: app.id,
+          error: transformError.message
+        });
+        return null;
+      }
+    }).filter(Boolean); // Remove any null entries from transformation errors
+
+    console.log(`Successfully formatted ${formattedApplications.length} applications`);
+    
+    return res.status(200).json({
       success: true,
-      count: applications.length,
-      data: applications,
+      data: formattedApplications
     });
+    
   } catch (error) {
-    next(error);
+    console.error('Error in getMyApplications:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      ...(error.original && { originalError: error.original })
+    });
+    
+    // Send detailed error in development, generic in production
+    const errorResponse = {
+      success: false,
+      message: process.env.NODE_ENV === 'development' 
+        ? `Error fetching applications: ${error.message}`
+        : 'Failed to fetch applications. Please try again later.'
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.error = {
+        name: error.name,
+        message: error.message,
+        ...(error.stack && { stack: error.stack })
+      };
+    }
+    
+    res.status(500).json(errorResponse);
   }
 };
 exports.getApplicationsForMyJobs = async (req, res, next) => {
