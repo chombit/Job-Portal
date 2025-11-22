@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';  // Removed /admin from here
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
