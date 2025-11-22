@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://job-portal-beige-ten.vercel.app'],
+  origin: ['http://localhost:5173', 'https://job-portal-beige-ten.vercel.app','https://job-portal-1-i70z.onrender.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
