@@ -28,11 +28,15 @@ const LoginPage = () => {
 
   const onSubmit = async (data) => {
     try {
-      await dispatch(loginUser(data)).unwrap();
-      toast.success('Login successful!');
-      navigate('/');
+      const result = await dispatch(loginUser(data)).unwrap();
+      if (result?.token) {
+        toast.success('Login successful!');
+        navigate('/');
+      }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', error);
+      const errorMessage = error?.message || 'Login failed. Please try again.';
+      toast.error(errorMessage);
     }
   };
 

@@ -64,7 +64,29 @@ module.exports = (sequelize) => {
 
   // Instance method to check password
   User.prototype.validPassword = async function (password) {
-    return await bcrypt.compare(password, this.password);
+    try {
+      console.log('Validating password for user:', this.id);
+      console.log('Password provided (first 2 chars):', password ? password.substring(0, 2) + '...' : 'undefined');
+      console.log('Stored password hash (first 10 chars):', this.password ? this.password.substring(0, 10) + '...' : 'undefined');
+      
+      if (!password || !this.password) {
+        console.error('Password validation error: Missing password or user password');
+        return false;
+      }
+      
+      const isMatch = await bcrypt.compare(password, this.password);
+      console.log('Password validation result:', isMatch);
+      return isMatch;
+    } catch (error) {
+      console.error('Error in validPassword:', {
+        message: error.message,
+        stack: error.stack,
+        userId: this.id,
+        hasPassword: !!this.password,
+        passwordType: typeof password
+      });
+      return false;
+    }
   };
 
   // Associations
