@@ -64,18 +64,23 @@ const startServer = async () => {
     }
     
     if (process.env.NODE_ENV !== 'test') {
-      const server = app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
-      }).on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          console.log(`Port ${PORT} is in use, trying port ${Number(PORT) + 1}...`);
-          app.listen(Number(PORT) + 1);
-        } else {
-          console.error('Server error:', err);
-          process.exit(1);
-        }
-      });
+  const server = app.listen(PORT, () => {
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://job-portal-1-i70z.onrender.com/api'
+      : `http://localhost:${PORT}/api`;
+    
+    console.log(`Server running on port ${PORT}`);
+    console.log(`🌐 API Base URL: ${baseUrl}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${PORT} is in use, trying port ${Number(PORT) + 1}...`);
+      app.listen(Number(PORT) + 1);
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
       process.on('unhandledRejection', (err) => {
         console.error('UNHANDLED REJECTION! 💥 Shutting down...');
         console.error(err);
