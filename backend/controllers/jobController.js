@@ -1,7 +1,8 @@
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
-const { Job, User, Application, SavedJob, sequelize } = require('../models');
+const db = require('../models');
+const { Job, User, Application, SavedJob } = db;
 const { AppError, NotFoundError, ForbiddenError } = require('../middleware/errorHandler');
 const { verifyToken } = require('../utils/jwt');
 
@@ -85,16 +86,16 @@ exports.getJobs = async (req, res, next) => {
     if (location) where.location = { [Op.iLike]: `%${location}%` };
     if (jobTypes) {
       if (Array.isArray(jobTypes)) {
-        where.job_type = { [Op.in]: jobTypes };
+        where.jobType = { [Op.in]: jobTypes };
       } else {
-        where.job_type = jobTypes;
+        where.jobType = jobTypes;
       }
     }
     if (experiences) {
       if (Array.isArray(experiences)) {
-        where.experience_level = { [Op.in]: experiences };
+        where.experienceLevel = { [Op.in]: experiences };
       } else {
-        where.experience_level = experiences;
+        where.experienceLevel = experiences;
       }
     }
     if (isRemote !== undefined) where.is_remote = isRemote === 'true';
@@ -115,7 +116,7 @@ exports.getJobs = async (req, res, next) => {
       },
     ];
 
-    const { count, rows: jobs } = await Job.findAndCountAll({
+    const { count, rows: jobs } = await db.Job.findAndCountAll({
       where,
       include,
       order,
