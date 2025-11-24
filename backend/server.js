@@ -66,7 +66,7 @@ const startServer = async () => {
     if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(PORT, () => {
     const baseUrl = process.env.NODE_ENV === 'production'
-      ? 'https://job-portal-1-i70z.onrender.com/api'
+      ? 'https://job-portal-dexz.onrender.com/api'
       : `http://localhost:${PORT}/api`;
     
     console.log(`Server running on port ${PORT}`);
