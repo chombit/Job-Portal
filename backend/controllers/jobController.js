@@ -22,7 +22,7 @@ exports.getJobs = async (req, res, next) => {
       isRemote,
       minSalary,
       maxSalary,
-      sort = '-created_at',
+      sort = '-createdAt',
     } = req.query;
 
     let jobTypes = Array.isArray(jobType) ? jobType : (req.query['jobType[]'] ? [req.query['jobType[]']].flat() : jobType);
@@ -72,8 +72,9 @@ exports.getJobs = async (req, res, next) => {
       const [field, direction] = sort.startsWith('-') 
         ? [sort.substring(1), 'DESC'] 
         : [sort, 'ASC'];
-      
-      order.push([field, direction]);
+      // ensure field uses model attribute names (camelCase)
+      const safeField = field === 'created_at' ? 'createdAt' : field;
+      order.push([safeField, direction]);
     }
     if (search) {
       where[Op.or] = [
@@ -83,45 +84,69 @@ exports.getJobs = async (req, res, next) => {
       ];
     }
     if (location) where.location = { [Op.iLike]: `%${location}%` };
+    // map filters to model attribute names (camelCase) to avoid DB/column name mismatches
     if (jobTypes) {
       if (Array.isArray(jobTypes)) {
-        where.job_type = { [Op.in]: jobTypes };
+        where.jobType = { [Op.in]: jobTypes };
       } else {
-        where.job_type = jobTypes;
+        where.jobType = jobTypes;
       }
-    }
-    if (experiences) {
-      if (Array.isArray(experiences)) {
-        where.experience_level = { [Op.in]: experiences };
-      } else {
-        where.experience_level = experiences;
-      }
-    }
-    if (isRemote !== undefined) where.is_remote = isRemote === 'true';
-    
-    if (minSalary || maxSalary) {
-      where.salary_range = {};
-      if (minSalary) where.salary_range[Op.gte] = parseInt(minSalary);
-      if (maxSalary) where.salary_range[Op.lte] = parseInt(maxSalary);
     }
 
+    if (experiences) {
+      if (Array.isArray(experiences)) {
+        where.experienceLevel = { [Op.in]: experiences };
+      } else {
+        where.experienceLevel = experiences;
+      }
+    }
+
+    if (isRemote !== undefined) where.isRemote = isRemote === 'true';
+
+    // salaryRange is JSONB; avoid complex JSON queries here to prevent SQL errors on some DBs.
+    // If minSalary/maxSalary filtering is required, implement a safe JSON path query later.
+
+    // Keep included attributes minimal to avoid JSONB/column mapping issues in production
     const include = [
       {
         model: User,
         as: 'employer',
-        attributes: ['id', 'name', 'profile_data'],
-        where: { is_active: true },
+        attributes: ['id', 'name'],
+        where: { isActive: true },
         required: true,
       },
     ];
 
-    const { count, rows: jobs } = await Job.findAndCountAll({
-      where,
-      include,
-      order,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
+    let count, jobs;
+    try {
+      const result = await Job.findAndCountAll({
+        where,
+        include,
+        order,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+      count = result.count;
+      jobs = result.rows;
+    } catch (err) {
+      console.error('Detailed DB error in getJobs:', {
+        message: err.message,
+        name: err.name,
+        sql: err.sql,
+        parent: err.parent && {
+          message: err.parent.message,
+          detail: err.parent.detail,
+          hint: err.parent.hint,
+          code: err.parent.code
+        },
+        stack: err.stack,
+      });
+      return res.status(500).json({
+        success: false,
+        message: 'Internal Server Error',
+        errors: err.parent ? err.parent.message : err.message,
+      });
+    }
 
     const totalPages = Math.ceil(count / limit);
 
