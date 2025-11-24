@@ -1,11 +1,11 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "lord123",
-    "database": "job_portal",
-    "host": "127.0.0.1",
+    "use_env_variable": "DATABASE_URL",
     "dialect": "postgres",
-    "logging": false
+    "logging": false,
+    "dialectOptions": {
+      "ssl": false
+    }
   },
   "test": {
     "username": "postgres",
@@ -13,7 +13,10 @@
     "database": "job_portal_test",
     "host": "127.0.0.1",
     "dialect": "postgres",
-    "logging": false
+    "logging": false,
+    "dialectOptions": {
+      "ssl": false
+    }
   },
   "production": {
     "use_env_variable": "DATABASE_URL",
