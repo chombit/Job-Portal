@@ -1,0 +1,32 @@
+name: Run DB migrations (manual/CI)
+
+on:
+  workflow_dispatch:    # manually triggerable from Actions UI
+  push:
+    branches:
+      - main           # optional: run on push to main
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '15'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          PGSSLMODE: require
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'   # optional; remove if not needed
+        run: |
+          npx sequelize-cli db:migrate --url "$DATABASE_URL" --migrations-path migrations --config config/config.json
