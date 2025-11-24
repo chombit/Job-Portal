@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { fetchPostedJobs, fetchJobApplications, updateApplicationStatus } from '../../../store/slices/employerSlice';
 import { deleteJob } from '../../../store/slices/jobSlice';
+import { API_URL } from '../../../config';
 
 const EmployerDashboard = () => {
   const [activeTab, setActiveTab] = useState('jobs');
@@ -275,7 +276,7 @@ const EmployerDashboard = () => {
                             <p>
                               <strong>Resume:</strong>
                               <a
-                                href={`http://localhost:5000/uploads/resumes/${application.resume}`}
+                                href={`${API_URL.replace(/\/api\/?$/, '')}/uploads/resumes/${application.resume}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 ml-1"
