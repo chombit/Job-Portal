@@ -169,11 +169,13 @@ exports.getJob = async (req, res, next) => {
     
     console.log('getJob called with ID:', jobId, 'Type:', typeof jobId);
     
-    if (!jobId || jobId === 'undefined') {
-      console.log('Job ID validation failed - ID is missing or undefined');
+    // Validate jobId is present and looks like a UUID (prevent accidental routes like /jobs/jobs)
+    const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!jobId || jobId === 'undefined' || !uuidV4Regex.test(jobId)) {
+      console.log('Job ID validation failed - invalid ID:', jobId);
       return res.status(400).json({
         success: false,
-        message: 'Job ID is required'
+        message: 'Invalid job ID. Provide a valid UUID for job details.'
       });
     }
     console.log('Attempting to find job with ID:', jobId);
