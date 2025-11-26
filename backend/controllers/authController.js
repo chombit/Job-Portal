@@ -57,7 +57,7 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.validPassword(password))) {
       throw new UnauthorizedError('Invalid credentials');
     }
-    user.last_login = new Date();
+    user.lastLogin = new Date();
     await user.save();
     const token = generateToken(user.id, user.role, user.isActive);
     const userData = user.get({ plain: true });

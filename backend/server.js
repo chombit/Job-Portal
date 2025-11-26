@@ -16,7 +16,10 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://job-portal-beige-ten.vercel.app'],
+  origin: [
+    'http://localhost:5173',
+    'https://job-portal-beige-ten.vercel.app',
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -30,8 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(errorHandler);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -49,6 +50,7 @@ app.all('*', (req, res) => {
   });
 });
 
+// Centralized error handler (last middleware)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-const PrivateRoute = ({ roles = [] }) => {
+const PrivateRoute = ({ roles = [], children }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   if (!isAuthenticated) {
@@ -12,7 +12,8 @@ const PrivateRoute = ({ roles = [] }) => {
     return <Navigate to="/unauthorized" />;
   }
 
-  return <Outlet />;
+  // If children (a layout) were provided, render them; otherwise render nested <Outlet />
+  return children ? children : <Outlet />;
 };
 
 export default PrivateRoute;
