@@ -26,6 +26,9 @@ jobs:
           npm ci --include=dev
           ls -la node_modules/.bin || true
 
+      - name: Fix CLI permissions
+        run: chmod +x backend/node_modules/.bin/sequelize-cli
+
       - name: Run migrations
         env:
           DATABASE_URL: ${{ secrets.RENDER_DB_URL }}
