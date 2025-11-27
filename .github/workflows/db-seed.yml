@@ -25,6 +25,9 @@ jobs:
           cd backend
           npm ci --include=dev
           ls -la node_modules/.bin || true
+    
+      - name: Install sequelize-cli globally
+        run: npm install -g sequelize-cli
 
       - name: Fix CLI permissions
         run: chmod +x backend/node_modules/.bin/sequelize-cli
