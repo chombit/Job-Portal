@@ -9,17 +9,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install dependencies
-        run: cd backend && npm install --include=dev
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Show Node & npm versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install backend dependencies (including dev)
+        run: |
+          cd backend
+          npm ci --include=dev
+          ls -la node_modules/.bin || true
+
       - name: Run migrations
         env:
           DATABASE_URL: ${{ secrets.RENDER_DB_URL }}
         run: |
+          set -e
           cd backend
+          echo "Running migrations against $DATABASE_URL"
           npx sequelize-cli db:migrate --url "$DATABASE_URL"
+
       - name: Run seeders
         env:
           DATABASE_URL: ${{ secrets.RENDER_DB_URL }}
         run: |
+          set -e
           cd backend
+          echo "Running seeders against $DATABASE_URL"
           npx sequelize-cli db:seed:all --url "$DATABASE_URL"
