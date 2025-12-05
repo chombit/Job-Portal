@@ -1,43 +1,29 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwind from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
-import path from 'path';
-
-export default defineConfig({
-  base: './',
-  plugins: [react()],
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'yup', 'property-expr']
-  },
-  build: {
-    commonjsOptions: {
-      include: [/react/, /react-dom/, /node_modules/, /node_modules\/property-expr/],
-      transformMixedEsModules: true
+include: [/react/, /react-dom/, /node_modules/, /node_modules\/property-expr/],
+  transformMixedEsModules: true
     }
   },
-  css: {
-    postcss: {
-      plugins: [
-        tailwind,
-        autoprefixer,
-      ],
+css: {
+  postcss: {
+    plugins: [
+      tailwind,
+      autoprefixer,
+    ],
     },
-  },
-  server: {
-    port: 5173,
+},
+server: {
+  port: 5173,
     open: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000',
+      proxy: {
+    '/api': {
+      target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false,
+          secure: false,
       },
-    },
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+},
+resolve: {
+  alias: {
+    '@': path.resolve(__dirname, './src'),
     },
-  },
+},
 });
