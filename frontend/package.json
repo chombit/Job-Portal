@@ -16,6 +16,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.9.1",
     "@rolldown/pluginutils": "^1.0.0-beta.50",
+    "@supabase/supabase-js": "^2.86.2",
     "axios": "^1.12.2",
     "date-fns": "^4.1.0",
     "formik": "^2.4.6",

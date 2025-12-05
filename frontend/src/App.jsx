@@ -1,5 +1,9 @@
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { loadUser, logout } from './store/slices/authSlice';
+import { supabase } from './config/supabaseClient';
 import Layout from './layouts/Layout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
@@ -21,6 +25,24 @@ import ProfilePage from './pages/ProfilePage';
 import AddUserPage from './pages/admin/AddUserPage';
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Initial load
+    dispatch(loadUser());
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        dispatch(loadUser());
+      } else if (event === 'SIGNED_OUT') {
+        dispatch(logout());
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [dispatch]);
+
   return (
     <Router>
       <Toaster position="top-right" />

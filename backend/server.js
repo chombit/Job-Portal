@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { sequelize } = require('./models');
 const { errorHandler } = require('./middleware/errorHandler');
 const apiRoutes = require('./routes/api');
 
@@ -55,34 +54,39 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
+const { supabase } = require('./config/supabaseClient');
+
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
-    console.log('✅ Database connection has been established successfully.');
-    
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('🔄 Database synchronized');
-    }
-    
-    if (process.env.NODE_ENV !== 'test') {
-  const server = app.listen(PORT, () => {
-    const baseUrl = process.env.NODE_ENV === 'production'
-      ? 'https://job-portal-dexz.onrender.com/api'
-      : `http://localhost:${PORT}/api`;
-    
-    console.log(`Server running on port ${PORT}`);
-    console.log(`🌐 API Base URL: ${baseUrl}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${PORT} is in use, trying port ${Number(PORT) + 1}...`);
-      app.listen(Number(PORT) + 1);
+    // Check Supabase connection
+    const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('❌ Unable to connect to Supabase:', error.message);
+      // Don't exit, just log error, as server might still serve static files or handle other things
     } else {
-      console.error('Server error:', err);
-      process.exit(1);
+      console.log('✅ Supabase connection established successfully.');
     }
-  });
+
+    if (process.env.NODE_ENV !== 'test') {
+      const server = app.listen(PORT, () => {
+        const baseUrl = process.env.NODE_ENV === 'production'
+          ? 'https://job-portal-dexz.onrender.com/api'
+          : `http://localhost:${PORT}/api`;
+
+        console.log(`Server running on port ${PORT}`);
+        console.log(`🌐 API Base URL: ${baseUrl}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.log(`Port ${PORT} is in use, trying port ${Number(PORT) + 1}...`);
+          app.listen(Number(PORT) + 1);
+        } else {
+          console.error('Server error:', err);
+          process.exit(1);
+        }
+      });
+
       process.on('unhandledRejection', (err) => {
         console.error('UNHANDLED REJECTION! 💥 Shutting down...');
         console.error(err);
@@ -92,7 +96,7 @@ const startServer = async () => {
       });
     }
   } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
+    console.error('❌ Server startup error:', error);
     process.exit(1);
   }
 };

@@ -1,9 +1,7 @@
-const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
-const { Job, User, Application, SavedJob, sequelize } = require('../models');
+const { supabase } = require('../config/supabaseClient');
 const { AppError, NotFoundError, ForbiddenError } = require('../middleware/errorHandler');
-const { verifyToken } = require('../utils/jwt');
 
 const uploadsDir = path.join(__dirname, '../uploads/resumes');
 if (!fs.existsSync(uploadsDir)) {
@@ -22,141 +20,102 @@ exports.getJobs = async (req, res, next) => {
       isRemote,
       minSalary,
       maxSalary,
-      sort = '-createdAt',
+      sort = '-created_at',
     } = req.query;
 
-    let jobTypes = Array.isArray(jobType) ? jobType : (req.query['jobType[]'] ? [req.query['jobType[]']].flat() : jobType);
-    let experiences = Array.isArray(experience) ? experience : (req.query['experience[]'] ? [req.query['experience[]']].flat() : experience);
-    const normalizeJobType = (type) => {
-      const map = {
-        'full-time': 'full-time',
-        'part-time': 'part-time',
-        'contract': 'contract',
-        'internship': 'internship',
-        'temporary': 'temporary',
-        'Full-time': 'full-time',
-        'Part-time': 'part-time',
-        'Contract': 'contract',
-        'Internship': 'internship',
-      };
-      return map[type] || type.toLowerCase();
-    };
-
-    const normalizeExperience = (level) => {
-      const map = {
-        'entry': 'entry',
-        'mid': 'mid',
-        'senior': 'senior',
-        'lead': 'lead',
-        'executive': 'executive',
-        'Entry Level': 'entry',
-        'Mid Level': 'mid',
-        'Senior': 'senior',
-        'Lead': 'lead',
-      };
-      return map[level] || level.toLowerCase().split(' ')[0];
-    };
-
-    if (jobTypes) {
-      jobTypes = Array.isArray(jobTypes) ? jobTypes.map(normalizeJobType) : normalizeJobType(jobTypes);
-    }
-
-    if (experiences) {
-      experiences = Array.isArray(experiences) ? experiences.map(normalizeExperience) : normalizeExperience(experiences);
-    }
     const offset = (page - 1) * limit;
-    const order = [];
-    const where = { status: 'published' };
 
-    if (sort) {
-      const [field, direction] = sort.startsWith('-') 
-        ? [sort.substring(1), 'DESC'] 
-        : [sort, 'ASC'];
-      // ensure field uses model attribute names (camelCase)
-      const safeField = field === 'created_at' ? 'createdAt' : field;
-      order.push([safeField, direction]);
-    }
+    // Start building the query
+    let query = supabase
+      .from('jobs')
+      .select('*, employer:profiles!employer_id(id, name, email)', { count: 'exact' })
+      .eq('status', 'published');
+
+    // Search filter
     if (search) {
-      where[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
-        { '$employer.name$': { [Op.iLike]: `%${search}%` } },
-      ];
-    }
-    if (location) where.location = { [Op.iLike]: `%${location}%` };
-    // map filters to model attribute names (camelCase) to avoid DB/column name mismatches
-    if (jobTypes) {
-      if (Array.isArray(jobTypes)) {
-        where.jobType = { [Op.in]: jobTypes };
-      } else {
-        where.jobType = jobTypes;
-      }
+      // Supabase doesn't support OR across different tables easily in one go without RPC
+      // For now, we'll search on job fields. 
+      // To search employer name, we'd need a more complex query or join filter
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    if (experiences) {
-      if (Array.isArray(experiences)) {
-        where.experienceLevel = { [Op.in]: experiences };
-      } else {
-        where.experienceLevel = experiences;
-      }
+    // Location filter
+    if (location) {
+      query = query.ilike('location', `%${location}%`);
     }
 
-    if (isRemote !== undefined) where.isRemote = isRemote === 'true';
+    // Job Type filter
+    if (jobType) {
+      const types = Array.isArray(jobType) ? jobType : [jobType];
+      // Normalize types if needed, but assuming frontend sends correct values
+      query = query.in('job_type', types.map(t => t.toLowerCase()));
+    }
 
-    // salaryRange is JSONB; avoid complex JSON queries here to prevent SQL errors on some DBs.
-    // If minSalary/maxSalary filtering is required, implement a safe JSON path query later.
+    // Experience Level filter
+    if (experience) {
+      const levels = Array.isArray(experience) ? experience : [experience];
+      query = query.in('experience_level', levels.map(l => l.toLowerCase().split(' ')[0]));
+    }
 
-    // Keep included attributes minimal to avoid JSONB/column mapping issues in production
-    const include = [
-      {
-        model: User,
-        as: 'employer',
-        attributes: ['id', 'name'],
-        where: { isActive: true },
-        required: true,
-      },
-    ];
+    // Remote filter
+    if (isRemote !== undefined) {
+      query = query.eq('is_remote', isRemote === 'true');
+    }
 
-    let count, jobs;
-    try {
-      const result = await Job.findAndCountAll({
-        where,
-        include,
-        order,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
-      count = result.count;
-      jobs = result.rows;
-    } catch (err) {
-      console.error('Detailed DB error in getJobs:', {
-        message: err.message,
-        name: err.name,
-        sql: err.sql,
-        parent: err.parent && {
-          message: err.parent.message,
-          detail: err.parent.detail,
-          hint: err.parent.hint,
-          code: err.parent.code
-        },
-        stack: err.stack,
-      });
-      return res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-        errors: err.parent ? err.parent.message : err.message,
-      });
+    // Salary filter (JSONB)
+    // Note: JSONB filtering in Supabase JS client can be tricky. 
+    // We might skip complex salary filtering for now or use a raw PostgREST filter if needed.
+
+    // Sorting
+    if (sort) {
+      const [field, direction] = sort.startsWith('-')
+        ? [sort.substring(1), { ascending: false }]
+        : [sort, { ascending: true }];
+
+      // Map camelCase to snake_case if needed
+      const dbField = field === 'createdAt' ? 'created_at' : field;
+      query = query.order(dbField, direction);
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    // Pagination
+    query = query.range(offset, offset + parseInt(limit) - 1);
+
+    const { data: jobs, error, count } = await query;
+
+    if (error) {
+      throw new AppError(error.message, 500);
     }
 
     const totalPages = Math.ceil(count / limit);
 
+    // Transform data to match frontend expectations (camelCase)
+    const formattedJobs = jobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      location: job.location,
+      jobType: job.job_type,
+      salaryRange: job.salary_range,
+      skills: job.skills,
+      experienceLevel: job.experience_level,
+      isRemote: job.is_remote,
+      status: job.status,
+      applicationDeadline: job.application_deadline,
+      createdAt: job.created_at,
+      updatedAt: job.updated_at,
+      employer: job.employer,
+      employerId: job.employer_id
+    }));
+
     res.status(200).json({
       success: true,
-      count: jobs.length,
+      count: formattedJobs.length,
       total: count,
       totalPages,
       currentPage: parseInt(page),
-      data: jobs,
+      data: formattedJobs,
     });
   } catch (error) {
     next(error);
@@ -166,61 +125,32 @@ exports.getJobs = async (req, res, next) => {
 exports.getJob = async (req, res, next) => {
   try {
     const jobId = req.params.id;
-    
-    console.log('getJob called with ID:', jobId, 'Type:', typeof jobId);
-    
-    // Validate jobId is present and looks like a UUID (prevent accidental routes like /jobs/jobs)
+
+    // Validate UUID
     const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!jobId || jobId === 'undefined' || !uuidV4Regex.test(jobId)) {
-      console.log('Job ID validation failed - invalid ID:', jobId);
+    if (!jobId || !uuidV4Regex.test(jobId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid job ID. Provide a valid UUID for job details.'
-      });
-    }
-    console.log('Attempting to find job with ID:', jobId);
-    const job = await Job.findByPk(jobId, {
-      include: [
-        {
-          model: User,
-          as: 'employer',
-          attributes: ['id', 'name', 'profileData'],
-        },
-      ],
-    });
-
-    console.log('Job found:', job ? 'Yes' : 'No');
-    if (job) {
-      console.log('Job details:', {
-        id: job.id,
-        title: job.title,
-        status: job.status,
-        employerId: job.employerId
+        message: 'Invalid job ID.'
       });
     }
 
-    if (!job) {
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .select('*, employer:profiles!employer_id(id, name, profile_data)')
+      .eq('id', jobId)
+      .single();
+
+    if (error || !job) {
       return res.status(404).json({
         success: false,
         message: 'Job not found'
       });
     }
 
-    if (!req.user) {
-      const authHeader = req.header('Authorization');
-      if (authHeader?.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        try {
-          const decoded = verifyToken(token);
-          req.user = { id: decoded.id, role: decoded.role };
-        } catch (err) {
-          console.warn('Optional auth decode failed:', err.message);
-        }
-      }
-    }
-
-    if (job.status !== 'published' && 
-        (!req.user || (req.user.role !== 'admin' && job.employerId !== req.user.id))) {
+    // Check visibility
+    if (job.status !== 'published' &&
+      (!req.user || (req.user.role !== 'admin' && job.employer_id !== req.user.id))) {
       return res.status(404).json({
         success: false,
         message: 'Job not found or not published'
@@ -230,31 +160,47 @@ exports.getJob = async (req, res, next) => {
     let hasApplied = false;
 
     if (req.user?.role === 'job_seeker') {
-      const existingApplication = await Application.findOne({
-        where: {
-          jobId: job.id,
-          applicantId: req.user.id,
-        },
-      });
+      const { data: application } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', job.id)
+        .eq('applicant_id', req.user.id)
+        .single();
 
-      hasApplied = Boolean(existingApplication);
+      hasApplied = !!application;
     }
 
-    const jobData = job.toJSON();
-    jobData.hasApplied = hasApplied;
+    // Format response
+    const jobData = {
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      location: job.location,
+      jobType: job.job_type,
+      salaryRange: job.salary_range,
+      skills: job.skills,
+      experienceLevel: job.experience_level,
+      isRemote: job.is_remote,
+      status: job.status,
+      applicationDeadline: job.application_deadline,
+      createdAt: job.created_at,
+      updatedAt: job.updated_at,
+      employer: {
+        id: job.employer.id,
+        name: job.employer.name,
+        profileData: job.employer.profile_data
+      },
+      employerId: job.employer_id,
+      hasApplied
+    };
 
     return res.status(200).json({
       success: true,
       data: jobData,
     });
-    
+
   } catch (error) {
-    console.error('Error in getJob:', {
-      error: error.message,
-      jobId: req.params.id,
-      userId: req.user?.id
-    });
-    
+    console.error('Error in getJob:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch job details',
@@ -262,22 +208,19 @@ exports.getJob = async (req, res, next) => {
     });
   }
 };
+
 exports.createJob = async (req, res, next) => {
   try {
-    console.log('User creating job:', req.user);
-    
     if (req.user.role !== 'employer' && req.user.role !== 'admin') {
-      console.log('Unauthorized user role:', req.user.role); 
       return res.status(403).json({ error: 'Not authorized to create jobs' });
     }
 
     const requiredFields = ['title', 'description', 'location', 'jobType'];
     const missingFields = requiredFields.filter(field => !req.body[field]);
-    
+
     if (missingFields.length > 0) {
-      console.log('Missing required fields:', missingFields); 
-      return res.status(400).json({ 
-        error: `Missing required fields: ${missingFields.join(', ')}` 
+      return res.status(400).json({
+        error: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
 
@@ -285,54 +228,101 @@ exports.createJob = async (req, res, next) => {
       title: req.body.title,
       description: req.body.description,
       location: req.body.location,
-      jobType: req.body.jobType.toLowerCase(),
-      employerId: req.user.id, 
+      job_type: req.body.jobType.toLowerCase(),
+      employer_id: req.user.id,
       status: req.body.status || 'draft',
-      isRemote: req.body.isRemote || false,
-      experienceLevel: req.body.experienceLevel ? req.body.experienceLevel.toLowerCase() : null,
-      salaryRange: req.body.salaryMin || req.body.salaryMax ? {
+      is_remote: req.body.isRemote || false,
+      experience_level: req.body.experienceLevel ? req.body.experienceLevel.toLowerCase() : null,
+      salary_range: req.body.salaryMin || req.body.salaryMax ? {
         min: req.body.salaryMin,
         max: req.body.salaryMax,
         currency: req.body.salaryCurrency || 'USD',
         period: req.body.salaryPeriod || 'year'
       } : null,
       skills: req.body.skills || [],
-      applicationDeadline: req.body.applicationDeadline || null
+      application_deadline: req.body.applicationDeadline || null
     };
 
-    console.log('Creating job with data:', jobData); 
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .insert(jobData)
+      .select()
+      .single();
 
-    const job = await Job.create(jobData);
+    if (error) {
+      throw new AppError(error.message, 400);
+    }
 
     res.status(201).json({
       success: true,
-      data: job
+      data: {
+        ...job,
+        jobType: job.job_type,
+        isRemote: job.is_remote,
+        experienceLevel: job.experience_level,
+        salaryRange: job.salary_range,
+        applicationDeadline: job.application_deadline,
+        createdAt: job.created_at
+      }
     });
   } catch (error) {
-    console.error('Error in createJob:', error); 
     next(error);
   }
 };
 
 exports.updateJob = async (req, res, next) => {
   try {
-    const job = await Job.findByPk(req.params.id);
+    const { data: job, error: fetchError } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
 
-    if (!job) {
+    if (fetchError || !job) {
       throw new NotFoundError('Job not found');
     }
 
-    if (req.user.role !== 'admin' && job.employerId !== req.user.id) {
+    if (req.user.role !== 'admin' && job.employer_id !== req.user.id) {
       throw new ForbiddenError('Not authorized to update this job');
     }
 
     const { employerId, ...updateData } = req.body;
-    
-    await job.update(updateData);
+
+    // Map camelCase to snake_case
+    const dbUpdateData = {};
+    if (updateData.title) dbUpdateData.title = updateData.title;
+    if (updateData.description) dbUpdateData.description = updateData.description;
+    if (updateData.location) dbUpdateData.location = updateData.location;
+    if (updateData.jobType) dbUpdateData.job_type = updateData.jobType;
+    if (updateData.status) dbUpdateData.status = updateData.status;
+    if (updateData.isRemote !== undefined) dbUpdateData.is_remote = updateData.isRemote;
+    if (updateData.experienceLevel) dbUpdateData.experience_level = updateData.experienceLevel;
+    if (updateData.skills) dbUpdateData.skills = updateData.skills;
+    if (updateData.applicationDeadline) dbUpdateData.application_deadline = updateData.applicationDeadline;
+    if (updateData.salaryRange) dbUpdateData.salary_range = updateData.salaryRange;
+
+    const { data: updatedJob, error } = await supabase
+      .from('jobs')
+      .update(dbUpdateData)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new AppError(error.message, 400);
+    }
 
     res.status(200).json({
       success: true,
-      data: job,
+      data: {
+        ...updatedJob,
+        jobType: updatedJob.job_type,
+        isRemote: updatedJob.is_remote,
+        experienceLevel: updatedJob.experience_level,
+        salaryRange: updatedJob.salary_range,
+        applicationDeadline: updatedJob.application_deadline,
+        createdAt: updatedJob.created_at
+      },
     });
   } catch (error) {
     next(error);
@@ -341,21 +331,29 @@ exports.updateJob = async (req, res, next) => {
 
 exports.deleteJob = async (req, res, next) => {
   try {
-    const job = await Job.findByPk(req.params.id);
+    const { data: job, error: fetchError } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
 
-    if (!job) {
+    if (fetchError || !job) {
       throw new NotFoundError('Job not found');
     }
 
-    if (req.user.role !== 'admin' && job.employerId !== req.user.id) {
+    if (req.user.role !== 'admin' && job.employer_id !== req.user.id) {
       throw new ForbiddenError('Not authorized to delete this job');
     }
 
-    await sequelize.transaction(async (transaction) => {
-      await Application.destroy({ where: { jobId: job.id }, transaction });
-      await SavedJob.destroy({ where: { jobId: job.id }, transaction });
-      await job.destroy({ transaction });
-    });
+    // Supabase cascade delete handles related records (applications, saved_jobs)
+    const { error } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) {
+      throw new AppError(error.message, 500);
+    }
 
     res.status(200).json({
       success: true,
@@ -366,97 +364,48 @@ exports.deleteJob = async (req, res, next) => {
   }
 };
 
-exports.applyForJob = async (req, res, next) => {
-  try {
-    const jobId = req.params.id;
-    const userId = req.user.id;
-    const job = await Job.findOne({
-      where: {
-        id: jobId,
-        status: 'published',
-      },
-    });
-
-    if (!job) {
-      throw new NotFoundError('Job not found or not accepting applications');
-    }
-
-    if (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) {
-      throw new AppError('Application deadline has passed', 400);
-    }
-    const existingApplication = await Application.findOne({
-      where: {
-        jobId,
-        applicantId: userId,
-      },
-    });
-
-    if (existingApplication) {
-      throw new AppError('You have already applied for this job', 400);
-    }
-
-    if (!req.files || !req.files.resume) {
-      throw new AppError('Please upload your resume', 400);
-    }
-
-    const resumeFile = req.files.resume;
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!allowedTypes.includes(resumeFile.mimetype)) {
-      throw new AppError('Please upload a valid resume (PDF or Word document)', 400);
-    }
-
-    if (resumeFile.size > maxSize) {
-      throw new AppError('Resume size should be less than 5MB', 400);
-    }
-
-    const resumeFileName = `resume-${Date.now()}-${resumeFile.name}`;
-    
-    const uploadPath = path.join(__dirname, '../uploads/resumes', resumeFileName);
-    await resumeFile.mv(uploadPath);
-
-    const application = await Application.create({
-      jobId,
-      applicantId: userId,
-      status: 'pending',
-      resume: resumeFileName,
-      createdAt: new Date(),
-    });
-
-    res.status(201).json({
-      success: true,
-      data: application,
-      message: 'Application submitted successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.getJobsByEmployer = async (req, res, next) => {
   try {
     const { employerId } = req.params;
-    
-    const jobs = await Job.findAll({
-      where: {
-        employerId,
-        status: 'active'
-      },
-      include: [
-        {
-          model: User,
-          as: 'employer',
-          attributes: ['id', 'name', 'email', 'company', 'logo']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+
+    const { data: jobs, error } = await supabase
+      .from('jobs')
+      .select('*, employer:profiles!employer_id(id, name, email, profile_data)')
+      .eq('employer_id', employerId)
+      .eq('status', 'published') // Assuming public view only shows published
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new AppError(error.message, 500);
+    }
+
+    const formattedJobs = jobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      location: job.location,
+      jobType: job.job_type,
+      salaryRange: job.salary_range,
+      skills: job.skills,
+      experienceLevel: job.experience_level,
+      isRemote: job.is_remote,
+      status: job.status,
+      applicationDeadline: job.application_deadline,
+      createdAt: job.created_at,
+      employer: {
+        id: job.employer.id,
+        name: job.employer.name,
+        email: job.employer.email,
+        // Map profile_data to company/logo if stored there
+        company: job.employer.profile_data?.company,
+        logo: job.employer.profile_data?.logo
+      }
+    }));
 
     res.status(200).json({
       success: true,
-      count: jobs.length,
-      data: jobs
+      count: formattedJobs.length,
+      data: formattedJobs
     });
   } catch (error) {
     console.error('Error in getJobsByEmployer:', error);
@@ -471,28 +420,42 @@ exports.getMyJobs = async (req, res, next) => {
     }
 
     const { status } = req.query;
-    const where = { employerId: req.user.id };
-    
+    let query = supabase
+      .from('jobs')
+      .select('*, applications(id, status, created_at)')
+      .eq('employer_id', req.user.id)
+      .order('created_at', { ascending: false });
+
     if (status) {
-      where.status = status;
+      query = query.eq('status', status);
     }
 
-    const jobs = await Job.findAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: Application,
-          as: 'applications',
-          attributes: ['id', 'status', 'createdAt'],
-        },
-      ],
-    });
+    const { data: jobs, error } = await query;
+
+    if (error) {
+      throw new AppError(error.message, 500);
+    }
+
+    const formattedJobs = jobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      location: job.location,
+      jobType: job.job_type,
+      salaryRange: job.salary_range,
+      skills: job.skills,
+      experienceLevel: job.experience_level,
+      isRemote: job.is_remote,
+      status: job.status,
+      applicationDeadline: job.application_deadline,
+      createdAt: job.created_at,
+      applications: job.applications
+    }));
 
     res.status(200).json({
       success: true,
-      data: jobs,
-      count: jobs.length
+      data: formattedJobs,
+      count: formattedJobs.length
     });
   } catch (error) {
     next(error);
