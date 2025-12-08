@@ -6,10 +6,10 @@ export const createJob = createAsyncThunk(
   async (jobData, { rejectWithValue }) => {
     try {
       const response = await jobService.createJob(jobData);
-      return response.data;
+      return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to create job'
+        error.message || 'Failed to create job'
       );
     }
   }
@@ -20,10 +20,10 @@ export const fetchJobs = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
       const response = await jobService.getJobs(params);
-      return response.data;
+      return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch jobs'
+        error.message || 'Failed to fetch jobs'
       );
     }
   }
@@ -34,10 +34,10 @@ export const fetchFeaturedJobs = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await jobService.getFeaturedJobs();
-      return response.data;
+      return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch featured jobs'
+        error.message || 'Failed to fetch featured jobs'
       );
     }
   }
@@ -47,15 +47,13 @@ export const fetchJobById = createAsyncThunk(
   'jobs/fetchById',
   async (jobId, { rejectWithValue }) => {
     try {
-      console.log('Fetching job with ID in thunk:', jobId); 
       if (!jobId) {
         throw new Error('Job ID is required');
       }
       const response = await jobService.getJob(jobId);
-      
-      return response.data || response;
+
+      return response;
     } catch (error) {
-      console.error('Error in fetchJobById thunk:', error); 
       return rejectWithValue(error.message);
     }
   }
@@ -66,10 +64,10 @@ export const updateJob = createAsyncThunk(
   async ({ jobId, jobData }, { rejectWithValue }) => {
     try {
       const response = await jobService.updateJob(jobId, jobData);
-      return response.data;
+      return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to update job'
+        error.message || 'Failed to update job'
       );
     }
   }
@@ -80,10 +78,10 @@ export const deleteJob = createAsyncThunk(
   async (jobId, { rejectWithValue }) => {
     try {
       await jobService.deleteJob(jobId);
-      return jobId; 
+      return jobId;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to delete job'
+        error.message || 'Failed to delete job'
       );
     }
   }
@@ -94,10 +92,10 @@ export const applyForJob = createAsyncThunk(
   async ({ jobId, applicationData }, { rejectWithValue }) => {
     try {
       const response = await jobService.applyForJob(jobId, applicationData);
-      return response.data;
+      return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to submit application'
+        error.message || 'Failed to submit application'
       );
     }
   }
@@ -139,7 +137,7 @@ const jobSlice = createSlice({
       if (index !== -1) {
         state.jobs[index] = action.payload;
       }
-        
+
       if (state.currentJob?.id === action.payload.id) {
         state.currentJob = action.payload;
       }
@@ -181,7 +179,7 @@ const jobSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       .addCase(applyForJob.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -227,7 +225,7 @@ const jobSlice = createSlice({
         state.featuredLoading = false;
         state.error = action.payload;
       });
-      
+
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;
