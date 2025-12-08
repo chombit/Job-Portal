@@ -1,117 +1,186 @@
-import { api } from './authService';
-
-const API_ENDPOINT = '/jobs';
+import { supabase } from '../../config/supabaseClient';
 
 export default {
-getJobs: async (params = {}) => {
-  try {
-    console.log('Fetching jobs with params:', params);
-    const response = await api.get(API_ENDPOINT, { params });
-    console.log('API Response:', response); 
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching jobs:', {
-      error: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-    throw error;
-  }
-},
-
-  createJob: async (jobData) => {
+  getJobs: async (params = {}) => {
     try {
-      const response = await api.post(API_ENDPOINT, jobData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating job:', error.response?.data || error.message);
+      let query = supabase
+        .from('jobs')
+        .select('*, employer:profiles!employer_id(id, name, email)')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
 
-      if (error.response?.status === 401) {
-        throw new Error('Your session has expired. Please log in again.');
+      // Apply filters
+      if (params.search) {
+        query = query.ilike('title', `%${params.search}%`);
       }
-      
-      throw new Error(
-        error.response?.data?.message || 
-        'Failed to create job. Please try again.'
-      );
+      if (params.location) {
+        query = query.ilike('location', `%${params.location}%`);
+      }
+      if (params.type) {
+        query = query.eq('job_type', params.type);
+      }
+      if (params.level) {
+        query = query.eq('experience_level', params.level);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      throw error;
     }
   },
 
-   getJob: async (jobId) => {
+  createJob: async (jobData) => {
     try {
-      if (!jobId) {
-        throw new Error('Job ID is required');
-      }
-      
-      console.log('Fetching job with ID:', jobId);
-      const response = await api.get(`${API_ENDPOINT}/${jobId}`);
-      console.log('Job fetched successfully:', response.data);
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert([{
+          ...jobData,
+          employer_id: user.id,
+          status: 'published' // Default to published for now
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error fetching job:', {
-        error: error.message,
-        jobId,
-        status: error.response?.status
-      });
+      console.error('Error creating job:', error);
+      throw error;
+    }
+  },
+
+  getJob: async (jobId) => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*, employer:profiles!employer_id(id, name, email)')
+        .eq('id', jobId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching job:', error);
       throw error;
     }
   },
 
   updateJob: async (id, jobData) => {
     try {
-      const response = await api.put(`${API_ENDPOINT}/${id}`, jobData);
-      return response.data;
+      const { data, error } = await supabase
+        .from('jobs')
+        .update(jobData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error(`Error updating job ${id}:`, error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to update job');
+      console.error(`Error updating job ${id}:`, error);
+      throw error;
     }
   },
 
   deleteJob: async (id) => {
     try {
-      const response = await api.delete(`${API_ENDPOINT}/${id}`);
-      return response.data;
+      const { error } = await supabase
+        .from('jobs')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { message: 'Job deleted successfully' };
     } catch (error) {
-      console.error(`Error deleting job ${id}:`, error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to delete job');
+      console.error(`Error deleting job ${id}:`, error);
+      throw error;
     }
   },
 
   getFeaturedJobs: async () => {
     try {
-      const response = await api.get(`${API_ENDPOINT}/featured`);
-      return response.data;
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*, employer:profiles!employer_id(id, name, email)')
+        .eq('status', 'published')
+        .limit(6)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error fetching featured jobs:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to fetch featured jobs');
+      console.error('Error fetching featured jobs:', error);
+      throw error;
     }
   },
 
   getMyJobs: async () => {
     try {
-      const response = await api.get(`${API_ENDPOINT}/my-jobs`);
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('employer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error fetching my jobs:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to fetch your jobs');
+      console.error('Error fetching my jobs:', error);
+      throw error;
     }
   },
 
   applyForJob: async (jobId, applicationData) => {
     try {
-      const formData = new FormData();
-      formData.append('resume', applicationData.resume);
-      formData.append('coverLetter', applicationData.coverLetter || '');
-      
-      const response = await api.post(`${API_ENDPOINT}/${jobId}/apply`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Upload resume if it's a file
+      let resumeUrl = applicationData.resume;
+      if (applicationData.resume instanceof File) {
+        const fileExt = applicationData.resume.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('resumes')
+          .upload(fileName, applicationData.resume);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('resumes')
+          .getPublicUrl(fileName);
+
+        resumeUrl = publicUrl;
+      }
+
+      const { data, error } = await supabase
+        .from('applications')
+        .insert([{
+          job_id: jobId,
+          applicant_id: user.id,
+          cover_letter: applicationData.coverLetter,
+          resume_url: resumeUrl,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error applying for job:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to submit application');
+      console.error('Error applying for job:', error);
+      throw error;
     }
   },
 };

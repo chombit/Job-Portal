@@ -1,4 +1,4 @@
-import { supabase } from '../../../../src/config/supabaseClient';
+import { supabase } from '../../../config/supabaseClient';
 
 const register = async (userData) => {
   const { email, password, name, role, company } = userData;
