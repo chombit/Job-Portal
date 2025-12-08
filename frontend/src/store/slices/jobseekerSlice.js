@@ -1,15 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import api from '../../utils/api';
+
+
+import { supabase } from '../../config/supabaseClient';
 
 export const fetchJobSeekerProfile = createAsyncThunk(
   'jobseeker/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/jobseeker/profile');
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch profile');
+      return rejectWithValue(error.message || 'Failed to fetch profile');
     }
   }
 );
@@ -18,23 +28,42 @@ export const fetchJobSeekerOverview = createAsyncThunk(
   'jobseeker/fetchOverview',
   async (_, { rejectWithValue }) => {
     try {
-      const [applicationsRes, savedJobsRes] = await Promise.all([
-        api.get('/applications/me'),
-      ]);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: applications, error } = await supabase
+        .from('applications')
+        .select(`
+          id,
+          status,
+          created_at,
+          job:jobs (
+            id,
+            title,
+            location,
+            employer:profiles!employer_id (
+              name
+            )
+          )
+        `)
+        .eq('applicant_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform structure to match what component expects if needed
+      // The select query returns nested objects: job.title, job.employer.name
+      // Component expects: application.job.title, application.job.employer.name
+      // The database returns:
+      // { id, status, created_at, job: { id, title, location, employer: { name } } }
+      // This matches what we need.
 
       return {
-        applications: applicationsRes.data?.data || applicationsRes.data || [],
+        applications: applications || [],
       };
     } catch (error) {
       console.error('Error fetching job seeker overview:', error);
-
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
-
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to load applications');
+      return rejectWithValue(error.message || 'Failed to load applications');
     }
   }
 );

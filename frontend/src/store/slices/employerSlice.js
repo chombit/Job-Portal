@@ -1,17 +1,50 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../utils/api';
+
+
+import { supabase } from '../../config/supabaseClient';
 
 export const fetchJobApplications = createAsyncThunk(
   'employer/fetchApplications',
   async (_, { rejectWithValue }) => {
     try {
       console.log('Fetching employer applications...');
-      const response = await api.get('/applications/my-jobs');
-      console.log('Applications API Response:', response.data);
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Fetch applications where the job's employer_id matches current user
+      const { data, error } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          job:jobs!inner (
+            id,
+            title,
+            employer_id
+          ),
+          applicant:profiles!applicant_id (
+            id,
+            name,
+            email,
+            profile_data
+          )
+        `)
+        .eq('job.employer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Applications fetched:', data);
+
+      // Wrap in data property to match expected slice structure if needed, 
+      // or just return data and adjust reducer. 
+      // Existing reducer expects `action.payload.data` or just `action.payload`?
+      // Reducer says: `state.applications = action.payload.data || [];`
+      // So let's return { data } to minimize reducer changes, or change reducer.
+      // Actually changing reducer is cleaner. Let's send plain data and update reducer.
+      return { data };
     } catch (error) {
       console.error('Error fetching applications:', error);
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch applications');
+      return rejectWithValue(error.message || 'Failed to fetch applications');
     }
   }
 );
@@ -20,11 +53,16 @@ export const updateApplicationStatus = createAsyncThunk(
   'employer/updateApplicationStatus',
   async ({ applicationId, status }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/applications/${applicationId}/status`, { status });
+      const { error } = await supabase
+        .from('applications')
+        .update({ status })
+        .eq('id', applicationId);
+
+      if (error) throw error;
       return { applicationId, status };
     } catch (error) {
       console.error('Error updating application status:', error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to update application status');
+      return rejectWithValue(error.message || 'Failed to update application status');
     }
   }
 );
@@ -33,16 +71,20 @@ export const fetchEmployerProfile = createAsyncThunk(
   'employer/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/me');
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch employer profile');
+      return rejectWithValue(error.message || 'Failed to fetch employer profile');
     }
   }
 );
@@ -52,24 +94,22 @@ export const fetchPostedJobs = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Fetching employer jobs...');
-      const response = await api.get('/jobs/my-jobs');
-      console.log('Jobs API Response:', {
-        status: response.status,
-        headers: response.headers,
-        data: response.data,
-        isArray: Array.isArray(response.data)
-      });
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('employer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Jobs fetched:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
-      
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch posted jobs');
+      return rejectWithValue(error.message || 'Failed to fetch posted jobs');
     }
   }
 );
